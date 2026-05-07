@@ -1,0 +1,50 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); /* Reemplaza 'Inter' por la fuente exacta de Vitaesentia si usan Google Fonts */
+
+:root {
+  /* Paleta de Colores de Vitaesentia */
+  --vita-primario: #007BFF; /* Cambia esto por el color principal de los botones de la web */
+  --vita-secundario: #4CAF50; /* Cambia esto por el color secundario */
+  --vita-fondo: #F9FAFB; /* Fondo gris muy claro para el panel */
+  --vita-blanco: #FFFFFF;
+  
+  /* Textos */
+  --vita-texto-oscuro: #1F2937;
+  --vita-texto-claro: #6B7280;
+  
+  /* Tipografía */
+  --vita-fuente: 'Inter', sans-serif; /* Asegúrate de que coincida con la web */
+  
+  /* Bordes y Sombras */
+  --vita-radio: 8px; /* Qué tan redondeados son los botones en la web original */
+  --vita-sombra: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--vita-fuente);
+  background-color: var(--vita-fondo);
+  color: var(--vita-texto-oscuro);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Clases utilitarias globales para botones estilo Vitaesentia */
+.btn-vita {
+  background-color: var(--vita-primario);
+  color: var(--vita-blanco);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--vita-radio);
+  border: none;
+  font-weight: 600;
+ 
+  transition: background-color 0.3s ease;
+}
+
+.btn-vita:hover {
+  opacity: 0.9;
+}
