@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
+import html2pdf from 'html2pdf.js'
 import './TablaColaboradores.css'
 
 export default function TablaColaboradores() {
@@ -18,11 +19,11 @@ export default function TablaColaboradores() {
   const colaboradorNombre = localStorage.getItem('colaborador_nombre') || 'Colaborador'
   const colaboradorCodigo = localStorage.getItem('colaborador_codigo') || ''
   const colaboradorRol = localStorage.getItem('colaborador_rol') || 'colaborador'
+  const colaboradorId = localStorage.getItem('colaborador_id') || ''
   const esAdmin = colaboradorRol === 'admin'
 
   const handleLogout = () => {
     localStorage.clear()
-    // Navegación limpia con React Router en lugar de recargar la página
     navigate('/login')
   }
 
@@ -41,6 +42,113 @@ export default function TablaColaboradores() {
     } catch (err) {
       setError(err.message)
       setLoading(false)
+    }
+  }
+
+  const formatearFecha = (fecha) => {
+    if (!fecha) return 'Fecha no disponible'
+    try {
+      const date = new Date(fecha)
+      if (isNaN(date.getTime())) return fecha
+      return date.toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    } catch {
+      return fecha
+    }
+  }
+
+  const exportarPDF = async () => {
+    try {
+      const data = await api.getReferidos(colaboradorId)
+      
+      if (!data || data.length === 0) {
+        alert('No hay referidos para exportar')
+        return
+      }
+
+      let tablaFilas = ''
+      data.forEach((ref, index) => {
+        tablaFilas += `
+          <tr>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px; text-align: center;">${index + 1}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${formatearFecha(ref.fecha_scan)}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.ip_address || 'No registrada'}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.pais || 'No disponible'}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.ciudad || 'No disponible'}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.referido_nombre || '-'}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.referido_apellido || '-'}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.referido_email || '-'}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.referido_telefono || '-'}</td>
+            <td style="border-bottom: 1px solid #E2E8F0; padding: 10px;">${ref.sistema_operativo || '?'}/${ref.navegador || '?'}</td>
+          </tr>
+        `
+      })
+
+      const contenidoHTML = `
+        <div id="reporte-pdf" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; background-color: #FFFFFF; color: #0F172A;">
+          <div style="text-align: left; border-bottom: 2px solid #E2E8F0; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="color: #0056B3; margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Reporte de Referidos</h1>
+            <p style="margin: 5px 0 0 0; color: #64748B; font-size: 13px;">VITAESENTIA</p>
+          </div>
+          
+          <div style="background: #F8FAFC; padding: 20px; border-left: 3px solid #0056B3; margin-bottom: 30px; border-radius: 4px;">
+            <p style="margin: 5px 0; font-size: 13px; color: #334155;"><strong>Colaborador:</strong> ${colaboradorNombre}</p>
+            <p style="margin: 5px 0; font-size: 13px; color: #334155;"><strong>Código:</strong> ${colaboradorCodigo}</p>
+            <p style="margin: 5px 0; font-size: 13px; color: #334155;"><strong>Rol:</strong> ${esAdmin ? 'Administrador' : 'Colaborador'}</p>
+            <p style="margin: 5px 0; font-size: 13px; color: #334155;"><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+            <p style="margin: 5px 0; font-size: 13px; color: #334155;"><strong>Total:</strong> ${data.length} registros</p>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+              <tr style="text-align: left; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; background-color: #F8FAFC;">
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">#</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">Fecha</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">IP</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">País</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">Ciudad</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">Nombre</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">Apellido</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">Email</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">Teléfono</th>
+                <th style="border-bottom: 2px solid #E2E8F0; padding: 12px 10px;">Dispositivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tablaFilas}
+            </tbody>
+          </table>
+          
+          <div style="text-align: left; margin-top: 50px; font-size: 11px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 20px;">
+            <p style="margin: 0;">igrafic360 - Sistema de Referidos Oficial</p>
+          </div>
+        </div>
+      `
+
+      const element = document.createElement('div')
+      element.innerHTML = contenidoHTML
+      document.body.appendChild(element)
+      
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: `referidos_${colaboradorNombre}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+      }
+      
+      await html2pdf().set(opt).from(element).save()
+      document.body.removeChild(element)
+      
+    } catch (err) {
+      console.error('Error en PDF:', err)
+      alert('Error al generar PDF: ' + err.message)
     }
   }
 
@@ -118,24 +226,6 @@ export default function TablaColaboradores() {
     window.open(qrUrl, '_blank')
   }
 
-  const formatearFecha = (fecha) => {
-    if (!fecha) return 'Fecha no disponible'
-    try {
-      const date = new Date(fecha)
-      if (isNaN(date.getTime())) return fecha
-      return date.toLocaleString('es-ES', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      })
-    } catch {
-      return fecha
-    }
-  }
-
   useEffect(() => {
     cargarColaboradores()
   }, [])
@@ -143,23 +233,20 @@ export default function TablaColaboradores() {
   if (loading) {
     return (
       <div className="loader-screen">
-        <div className="loader-ring">
-          <div className="loader-ring-inner"></div>
-        </div>
+        <div className="loader-ring"></div>
         <h2 className="loader-title">VITAESENTIA</h2>
-        <p className="loader-subtitle">Preparando tu entorno de trabajo...</p>
+        <p className="loader-subtitle">Cargando datos del servidor...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="error-card">
-          <h3>❌ Error de Conexión</h3>
+      <div className="error-container" style={{ padding: '50px', textAlign: 'center', color: '#0F172A' }}>
+        <div className="error-card" style={{ background: '#FFFFFF', padding: '40px', borderRadius: '8px', display: 'inline-block', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ color: '#DC2626' }}>Error de Conexión</h3>
           <p>{error}</p>
-          <p className="error-help">Verifica que el servidor esté activo.</p>
-          <button className="btn-reintentar" onClick={cargarColaboradores}>Reintentar</button>
+          <button className="btn-reintentar" onClick={cargarColaboradores} style={{ background: '#0056B3', color: '#FFF', border: 'none', padding: '12px 24px', borderRadius: '6px', cursor: 'pointer', marginTop: '15px', fontWeight: '600' }}>Reintentar</button>
         </div>
       </div>
     )
@@ -168,20 +255,20 @@ export default function TablaColaboradores() {
   return (
     <div className="container">
       <div className="header-user">
-        <h1>👥 Panel de Colaboradores - Vitaesentia</h1>
+        <h1>Panel de Colaboradores</h1>
         
         <div className="user-info">
           <span className="user-role">
-            {esAdmin ? '👑 Administrador' : '👤 Colaborador'}
+            {esAdmin ? 'Administrador' : 'Colaborador'}
           </span>
           <span className="user-code">
-            🔑 {colaboradorCodigo}
+            {colaboradorCodigo}
           </span>
           <span className="user-name">
-            👤 {colaboradorNombre}
+            {colaboradorNombre}
           </span>
           <button className="btn-logout" onClick={handleLogout}>
-            🚪 Cerrar Sesión
+            Cerrar Sesión
           </button>
         </div>
       </div>
@@ -197,20 +284,26 @@ export default function TablaColaboradores() {
           />
           <input
             type="email"
-            placeholder="Email"
+            placeholder="Correo electrónico"
             value={nuevoColab.email}
             onChange={(e) => setNuevoColab({ ...nuevoColab, email: e.target.value })}
             required
           />
-          <button type="submit">➕ Agregar Colaborador</button>
+          <button type="submit">Agregar</button>
         </form>
       )}
 
       {!esAdmin && (
         <div className="info-message">
-          ℹ️ Tienes acceso de solo lectura. No puedes modificar colaboradores.
+          Modo de lectura activado. No es posible modificar registros.
         </div>
       )}
+
+      <div className="export-pdf-container">
+        <button className="btn-pdf" onClick={exportarPDF}>
+          Descargar PDF
+        </button>
+      </div>
 
       <div className="table-wrapper">
         <table className="tabla">
@@ -256,29 +349,29 @@ export default function TablaColaboradores() {
                   {esAdmin && (
                     <td className="codigo">
                       <span className="selectable-text">{colab.codigo_unico}</span>
-                     </td>
+                    </td>
                   )}
                   <td>
                     <button className="btn-qr" onClick={() => generarQR(colab.codigo_unico, colab.nombre)}>
-                      📱 QR
+                      QR
                     </button>
                   </td>
                   <td className="referidos-count">
                     <button className="btn-referidos" onClick={() => verReferidos(colab.id)}>
-                      {showReferidos === colab.id ? '▲ Ocultar' : '▼ Ver'} ({colab.total_referidos || 0})
+                      {showReferidos === colab.id ? 'Ocultar' : 'Ver'} ({colab.total_referidos || 0})
                     </button>
                   </td>
                   {esAdmin && (
                     <td className="acciones">
                       {editando === colab.id ? (
                         <div className="action-buttons">
-                          <button className="btn-guardar" onClick={() => guardarEdicion(colab.id)}>💾 Guardar</button>
-                          <button className="btn-cancelar" onClick={cancelarEdicion}>✖ Cancelar</button>
+                          <button className="btn-guardar" onClick={() => guardarEdicion(colab.id)}>Guardar</button>
+                          <button className="btn-cancelar" onClick={cancelarEdicion}>Cancelar</button>
                         </div>
                       ) : (
                         <div className="action-buttons">
-                          <button className="btn-editar" onClick={() => editarColaborador(colab)}>✏ Editar</button>
-                          <button className="btn-eliminar" onClick={() => eliminarColaborador(colab.id, colab.nombre)}>🗑 Eliminar</button>
+                          <button className="btn-editar" onClick={() => editarColaborador(colab)}>Editar</button>
+                          <button className="btn-eliminar" onClick={() => eliminarColaborador(colab.id, colab.nombre)}>Eliminar</button>
                         </div>
                       )}
                     </td>
@@ -288,37 +381,37 @@ export default function TablaColaboradores() {
                   <tr className="referidos-row">
                     <td colSpan={esAdmin ? 7 : 5}>
                       <div className="subtabla">
-                        <h4>📋 Referidos de {colab.nombre}</h4>
+                        <h4>Referidos de {colab.nombre}</h4>
                         {referidos[colab.id]?.length === 0 ? (
-                          <p className="no-referidos">Aún no hay referidos registrados.</p>
+                          <p className="no-referidos" style={{ color: '#64748B', fontSize: '0.85rem' }}>No se encontraron registros.</p>
                         ) : (
                           <div className="subtable-wrapper">
-                            <table className="tabla-referidos">
+                            <table className="tabla-referidos" style={{ width: '100%', borderCollapse: 'collapse' }}>
                               <thead>
                                 <tr>
-                                  <th>Fecha</th>
-                                  <th>IP</th>
-                                  <th>País</th>
-                                  <th>Ciudad</th>
-                                  <th>Nombre</th>
-                                  <th>Apellido</th>
-                                  <th>Email</th>
-                                  <th>Teléfono</th>
-                                  <th>SO / Navegador</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>Fecha</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>IP</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>País</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>Ciudad</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>Nombre</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>Apellido</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>Email</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>Teléfono</th>
+                                  <th style={{ padding: '10px 15px', textAlign: 'left' }}>SO / Navegador</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {referidos[colab.id]?.map(ref => (
                                   <tr key={ref.id}>
-                                    <td className="selectable-text">{formatearFecha(ref.fecha_scan)}</td>
-                                    <td className="selectable-text">{ref.ip_address || 'No registrada'}</td>
-                                    <td className="selectable-text">{ref.pais || 'No disponible'}</td>
-                                    <td className="selectable-text">{ref.ciudad || 'No disponible'}</td>
-                                    <td className="selectable-text">{ref.referido_nombre || '-'}</td>
-                                    <td className="selectable-text">{ref.referido_apellido || '-'}</td>
-                                    <td className="selectable-text">{ref.referido_email || '-'}</td>
-                                    <td className="selectable-text">{ref.referido_telefono || '-'}</td>
-                                    <td className="user-agent selectable-text">
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{formatearFecha(ref.fecha_scan)}</td>
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.ip_address || 'No registrada'}</td>
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.pais || 'No disponible'}</td>
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.ciudad || 'No disponible'}</td>
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.referido_nombre || '-'}</td>
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.referido_apellido || '-'}</td>
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.referido_email || '-'}</td>
+                                    <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.referido_telefono || '-'}</td>
+                                    <td className="user-agent selectable-text" style={{ padding: '12px 15px' }}>
                                       {ref.sistema_operativo || '?'} / {ref.navegador || '?'}
                                     </td>
                                   </tr>
@@ -328,13 +421,18 @@ export default function TablaColaboradores() {
                           </div>
                         )}
                       </div>
-                     </td>
-                   </tr>
+                    </td>
+                  </tr>
                 )}
               </Fragment>
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="footer-copyright">
+        <p>© 2026 igrafic360 - Sistema de Referidos. Todos los derechos reservados.</p>
+        <p>Desarrollado por <a href="https://igrafic360.net" target="_blank" rel="noopener noreferrer">igrafic360.net</a></p>
       </div>
     </div>
   )

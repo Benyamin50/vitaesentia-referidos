@@ -1,105 +1,89 @@
-/* TablaColaboradores.css */
+/* TablaColaboradores.css - ESTILO MODERNO MINIMALISTA (Colores Vitaesentia) */
 
-/* Paleta de colores Premium - Estética Vitaesentia (Sofisticada) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
-  --vita-brand: #0F172A; 
-  --vita-brand-blue: #007BFF; 
-  --vita-brand-blue-hover: #0056b3;
-  --vita-bg-page: #F8FAFC; 
-  --vita-bg-card: #FFFFFF; 
-  --vita-text-main: #334155; 
-  --vita-text-muted: #64748B; 
-  --vita-border: #E2E8F0; 
-  --vita-radius: 16px; 
+  /* Paleta Vitaesentia (Luminosa y Limpia) */
+  --bg-page: #F8FAFC; /* Fondo general gris muy claro casi celeste */
+  --bg-card: #FFFFFF; /* Tarjeta blanca pura */
+  --bg-element: #F1F5F9; /* Fondos secundarios para inputs */
   
-  --hover-qr: #EFF6FF; 
-  --text-qr: #1D4ED8; 
-  --hover-edit: #F0FDF4; 
-  --text-edit: #15803D; 
-  --hover-delete: #FEF2F2; 
-  --text-delete: #B91C1C; 
+  --text-main: #0F172A; /* Azul marino casi negro para textos fuertes */
+  --text-muted: #64748B; /* Gris azulado para subtítulos */
+  
+  --border-color: #E2E8F0; /* Bordes muy sutiles */
+  
+  /* Color de Acento Vitaesentia */
+  --accent-color: #0056B3; /* Azul corporativo */
+  --accent-hover: #004494; /* Azul más oscuro para hover */
+  
+  --radius-soft: 8px; /* Bordes modernos y suaves */
 }
 
-/* === ANIMACIÓN DE CARGA SOFISTICADA AZUL === */
+/* === CORRECCIÓN DEL FONDO CORTADO === */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-page);
+  min-height: 100vh;
+}
+
+/* === ANIMACIÓN DE CARGA MODERNA === */
 .loader-screen {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 80vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100vh; /* <-- Esto arregla el corte blanco de tu captura */
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  margin: 0;
 }
 
 .loader-ring {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  border: 3px solid transparent;
-  border-top-color: var(--vita-brand-blue);
-  animation: spin-ring 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
-  margin-bottom: 30px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent-color);
+  animation: spin-modern 1s linear infinite;
+  margin-bottom: 25px;
 }
 
-.loader-ring::before, 
-.loader-ring::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  border: 3px solid transparent;
-}
-
-.loader-ring::before {
-  top: 6px; left: 6px; right: 6px; bottom: 6px;
-  border-top-color: #4DA3FF; 
-  animation: spin-ring 2s linear infinite reverse;
-}
-
-.loader-ring::after {
-  top: 16px; left: 16px; right: 16px; bottom: 16px;
-  border-top-color: #004085; 
-  animation: spin-ring 1s ease-in-out infinite;
-}
-
-@keyframes spin-ring {
+@keyframes spin-modern {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
 .loader-title {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--vita-brand);
-  letter-spacing: 4px;
+  letter-spacing: 3px;
+  color: var(--text-main);
   margin: 0 0 10px 0;
   text-transform: uppercase;
-  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .loader-subtitle {
-  font-size: 0.95rem;
-  color: var(--vita-text-muted);
-  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-muted);
   margin: 0;
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  font-weight: 400;
 }
 
 /* === CONTENEDOR PRINCIPAL === */
 .container {
-  /* Hacemos el contenedor mucho más amplio */
-  max-width: 1440px;
-  width: 96%;
+  max-width: 1300px;
+  width: 95%;
   margin: 40px auto;
   padding: 50px;
-  background-color: var(--vita-bg-card);
-  border-radius: var(--vita-radius);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: var(--vita-text-main);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-soft);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04); /* Sombra súper elegante y suave */
+  font-family: 'Inter', sans-serif;
+  color: var(--text-main);
 }
 
 /* Header */
@@ -108,16 +92,16 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
-  border-bottom: 1px solid var(--vita-border);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 30px;
 }
 
 .header-user h1 {
   font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--vita-brand);
+  font-weight: 600;
+  color: var(--text-main);
   margin: 0;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.5px;
 }
 
 .user-info {
@@ -127,101 +111,129 @@
 }
 
 .user-role, .user-code {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 8px 16px;
-  border-radius: 999px;
+  letter-spacing: 1px;
+  padding: 6px 12px;
+  border-radius: 4px;
 }
 
 .user-role {
-  background-color: #F8FAFC;
-  color: var(--vita-text-main);
-  border: 1px solid var(--vita-border);
+  background-color: var(--bg-page);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
 }
 
 .user-code {
-  background-color: var(--hover-qr);
-  color: var(--text-qr);
+  background-color: rgba(0, 86, 179, 0.05);
+  color: var(--accent-color);
+  border: 1px solid rgba(0, 86, 179, 0.2);
 }
 
 .user-name {
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--vita-text-main);
+  color: var(--text-main);
   margin: 0 10px;
 }
 
 .btn-logout {
   background-color: transparent;
-  color: var(--vita-text-muted);
-  border: 1px solid var(--vita-border);
-  padding: 10px 20px;
-  border-radius: 999px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 8px 18px;
+  border-radius: var(--radius-soft);
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-logout:hover {
-  background-color: var(--hover-delete);
-  color: var(--text-delete);
+  background-color: #FEE2E2;
+  color: #DC2626;
   border-color: #FECACA;
 }
 
-/* Formulario Superior (Crear) */
+/* Formulario Superior */
 .form-nuevo {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   margin-bottom: 40px;
-  background-color: #FFFFFF;
-  padding: 25px;
-  border-radius: 12px;
-  border: 1px solid var(--vita-border);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  background-color: transparent;
 }
 
 .form-nuevo input {
   flex: 1;
   padding: 14px 20px;
-  border: 1px solid var(--vita-border);
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-  transition: all 0.2s ease;
-  color: var(--vita-text-main);
-  background-color: var(--vita-bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-soft);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.01);
+}
+
+.form-nuevo input::placeholder {
+  color: #94A3B8;
 }
 
 .form-nuevo input:focus {
-  border-color: var(--vita-brand-blue);
-  background-color: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
 }
 
 .form-nuevo button {
-  background-color: var(--vita-brand-blue);
-  color: #fff;
+  background-color: var(--accent-color);
+  color: #FFFFFF;
   border: none;
-  padding: 0 35px;
-  border-radius: 8px;
+  padding: 0 30px;
+  border-radius: var(--radius-soft);
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 86, 179, 0.2);
 }
 
 .form-nuevo button:hover {
-  background-color: var(--vita-brand-blue-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.25);
+  background-color: var(--accent-hover);
 }
 
-/* === TABLA PRINCIPAL SOFISTICADA === */
+/* Botón Exportar PDF */
+.export-pdf-container {
+  margin-bottom: 25px;
+  text-align: right;
+}
+
+.btn-pdf {
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: var(--radius-soft);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-pdf:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background-color: rgba(0, 86, 179, 0.02);
+}
+
+/* === TABLA === */
 .table-wrapper {
   overflow-x: auto;
 }
@@ -233,199 +245,123 @@
 
 .tabla th {
   text-align: left;
-  /* Más espacio en las cabeceras */
-  padding: 16px 24px;
-  color: var(--vita-text-muted);
+  padding: 16px 20px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-bottom: 1px solid var(--vita-border);
-  background-color: transparent; 
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .tabla td {
-  /* Mucho más espacio vertical y horizontal en las celdas */
-  padding: 24px 24px;
-  border-bottom: 1px solid var(--vita-border);
-  font-size: 1rem;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
   vertical-align: middle;
-  transition: background-color 0.2s ease;
+  color: var(--text-main);
 }
 
 .tabla tbody tr:hover td {
-  background-color: #F8FAFC; 
-}
-
-.nombre, .selectable-text {
-  outline: none !important;
-  cursor: default;
+  background-color: var(--bg-page);
 }
 
 .nombre {
   font-weight: 600;
-  color: var(--vita-brand);
+  color: var(--text-main);
 }
 
 .codigo span {
-  font-family: 'ui-monospace', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-  background-color: #F1F5F9;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: var(--vita-text-muted);
-  border: 1px solid var(--vita-border);
+  font-family: monospace;
+  background-color: var(--bg-page);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
 }
 
-/* === BOTONES DE ACCIÓN === */
+/* Botones de acción */
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-qr, .btn-referidos, .btn-editar, .btn-eliminar, .btn-guardar, .btn-cancelar {
-  background-color: #FFFFFF;
-  border: 1px solid var(--vita-border);
-  color: var(--vita-text-main);
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.btn-qr:hover { background-color: var(--hover-qr); color: var(--text-qr); border-color: #BFDBFE; }
-.btn-referidos:hover { background-color: #F8FAFC; border-color: #CBD5E1; }
-.btn-editar:hover { background-color: var(--hover-edit); color: var(--text-edit); border-color: #BBF7D0; }
-.btn-eliminar:hover { background-color: var(--hover-delete); color: var(--text-delete); border-color: #FECACA; }
+.btn-qr:hover, .btn-referidos:hover { background-color: var(--bg-page); color: var(--text-main); }
+.btn-editar:hover { border-color: var(--accent-color); color: var(--accent-color); }
+.btn-eliminar:hover { border-color: #DC2626; color: #DC2626; background-color: #FEF2F2; }
 
-.btn-guardar {
-  background-color: var(--vita-brand-blue);
-  color: white;
-  border-color: var(--vita-brand-blue);
-}
-.btn-guardar:hover {
-  background-color: var(--vita-brand-blue-hover);
-}
+.btn-guardar { background-color: var(--accent-color); color: #FFF; border-color: var(--accent-color); }
+.btn-guardar:hover { background-color: var(--accent-hover); }
 
-.btn-cancelar:hover {
-  background-color: #F1F5F9;
-}
-
+/* Edición */
 td input {
-  border: 1px solid var(--vita-border);
-  border-radius: 6px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--accent-color);
+  color: var(--text-main);
+  border-radius: 4px;
+  padding: 8px;
   outline: none;
-  font-family: inherit;
-  background-color: #F8FAFC;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
 }
 
-td input:focus {
-  border-color: var(--vita-brand-blue);
-  background-color: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-/* === SUBTABLA DE REFERIDOS === */
-.referidos-row td {
-  padding: 0;
-  border-bottom: none;
-}
-
-.referidos-row:hover td {
-  background-color: transparent !important;
-}
+/* Subtabla */
+.referidos-row td { padding: 0; border: none; }
+.referidos-row:hover td { background-color: transparent !important; }
 
 .subtabla {
-  background-color: #FAFAFA;
-  /* Más espacio dentro de la subtabla */
-  padding: 30px 45px;
-  border-bottom: 1px solid var(--vita-border);
-  border-left: 4px solid var(--vita-brand-blue); 
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+  background-color: var(--bg-element);
+  padding: 30px;
+  border-left: 3px solid var(--accent-color);
 }
 
 .subtabla h4 {
-  margin: 0 0 20px 0;
-  font-size: 1.05rem;
+  font-family: 'Inter', sans-serif;
+  margin: 0 0 15px 0;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--vita-brand);
+  color: var(--text-main);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
-.no-referidos {
-  color: var(--vita-text-muted);
-  font-size: 0.95rem;
-}
+.tabla-referidos th { background-color: transparent; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
+.tabla-referidos td { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
 
-.subtable-wrapper {
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid var(--vita-border);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-}
-
-.tabla-referidos {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #FFFFFF;
-}
-
-.tabla-referidos th {
-  background-color: #F8FAFC;
-  padding: 14px 20px;
-  font-size: 0.75rem;
-  border-bottom: 1px solid var(--vita-border);
-}
-
-.tabla-referidos td {
-  padding: 16px 20px;
-  font-size: 0.9rem;
-  color: var(--vita-text-muted);
-}
-
-.user-agent {
-  font-size: 0.8rem;
-}
-
-/* Mensajes de Error / Info */
 .info-message {
-  background-color: var(--hover-qr);
-  color: var(--text-qr);
-  padding: 18px 24px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-  font-size: 0.95rem;
+  background-color: rgba(0, 86, 179, 0.05);
+  color: var(--accent-color);
+  padding: 15px 20px;
+  border-radius: var(--radius-soft);
+  margin-bottom: 25px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(0, 86, 179, 0.1);
   font-weight: 500;
-  border: 1px solid #BFDBFE;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .header-user {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  
-  .user-info {
-    flex-wrap: wrap;
-  }
-
-  .form-nuevo {
-    flex-direction: column;
-  }
-  
-  .container {
-    width: 100%;
-    padding: 20px;
-    margin: 20px 0;
-    border-radius: 0;
-  }
+.footer-copyright {
+  margin-top: 40px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  padding-top: 25px;
 }
+
+.footer-copyright a { color: var(--accent-color); text-decoration: none; font-weight: 500; }
+.footer-copyright a:hover { text-decoration: underline; }
