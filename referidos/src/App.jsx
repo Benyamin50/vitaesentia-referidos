@@ -10,8 +10,13 @@ function PrivateRoute({ children }) {
 }
 
 function App() {
+  // Detectar automáticamente el basename según el entorno
+  const basename = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '/'
+    : '/VitaesentiaRef'
+
   return (
-    <BrowserRouter basename="/VitaesentiaRef">
+    <BrowserRouter basename={basename}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/landing" element={<LandingReferido />} />

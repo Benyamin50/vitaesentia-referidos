@@ -1,32 +1,14 @@
-<<<<<<< HEAD
 /* Login.css - ESTILO VITAESENTIA (Corporativo, Limpio y Luminoso) */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* === CONTENEDOR PRINCIPAL === */
-=======
-/* Login.css */
-
-:root {
-  --vita-brand-dark: #0F172A; 
-  --vita-brand-blue: #007BFF; 
-  --vita-brand-blue-hover: #0056b3;
-  --vita-text-main: #334155; 
-  --vita-text-muted: #64748B; 
-  --vita-border: #E2E8F0; 
-  --bg-delete: #FEF2F2;
-  --text-delete: #B91C1C;
-}
-
-/* Contenedor principal con fondo premium */
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
 .vitae-login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-<<<<<<< HEAD
-  background-color: #F8FAFC; /* Slate 50 - Fondo general limpio */
+  background-color: #F8FAFC;
   font-family: 'Inter', sans-serif;
   position: relative;
   overflow: hidden;
@@ -72,7 +54,7 @@
   width: 60px;
   height: 60px;
   background-color: rgba(0, 86, 179, 0.06);
-  color: #0056B3; /* Azul Vitaesentia */
+  color: #0056B3;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -82,13 +64,13 @@
 .vitae-login-card h1 {
   margin: 0;
   font-size: 1.5rem;
-  color: #0F172A; /* Slate 900 */
+  color: #0F172A;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
 
 .login-subtitle {
-  color: #64748B; /* Slate 500 */
+  color: #64748B;
   font-size: 0.95rem;
   margin: 8px 0 35px 0;
   font-weight: 400;
@@ -97,109 +79,14 @@
 /* === FORMULARIO E INPUTS === */
 .vitae-login-input-group {
   text-align: left;
-=======
-  /* Fondo gris azulado ultra claro */
-  background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Efecto de luz difuminada detrás de la tarjeta (estilo moderno) */
-.vitae-login-glow {
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(0,123,255,0.15) 0%, rgba(255,255,255,0) 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* La tarjeta blanca central animada */
-.vitae-login-card {
-  background-color: #FFFFFF;
-  width: 100%;
-  max-width: 420px;
-  padding: 45px 40px;
-  border-radius: 20px;
-  /* Sombra multicapa para profundidad 3D */
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  z-index: 1;
-  /* Animación de entrada */
-  opacity: 0;
-  transform: translateY(20px);
-  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes slideUpFade {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Logo Premium Circular */
-.vitae-login-brand {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.vitae-logo-circle {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-  color: var(--vita-brand-blue);
-  border-radius: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 4px 6px rgba(0,123,255,0.1);
-  transform: rotate(-5deg);
-}
-
-/* Títulos y textos */
-.vitae-login-card h1 {
-  text-align: center;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--vita-brand-dark);
-  margin: 0 0 5px 0;
-  letter-spacing: -0.03em;
-}
-
-.login-subtitle {
-  text-align: center;
-  font-size: 0.95rem;
-  color: var(--vita-text-muted);
-  margin: 0 0 35px 0;
-  font-weight: 500;
-}
-
-/* Grupo de Input con Icono interno */
-.vitae-login-input-group {
-  display: flex;
-  flex-direction: column;
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   margin-bottom: 25px;
 }
 
 .vitae-login-input-group label {
-<<<<<<< HEAD
   display: block;
   font-size: 0.85rem;
   font-weight: 600;
   color: #334155;
-=======
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--vita-text-main);
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   margin-bottom: 8px;
 }
 
@@ -213,12 +100,10 @@
   position: absolute;
   left: 14px;
   color: #94A3B8;
-<<<<<<< HEAD
   pointer-events: none;
   transition: color 0.3s ease;
 }
 
-/* Cuando el input está enfocado, el icono se pinta de azul */
 .input-wrapper:focus-within .input-icon {
   color: #0056B3;
 }
@@ -280,76 +165,12 @@
   font-size: 0.95rem;
   font-weight: 600;
   font-family: 'Inter', sans-serif;
-=======
-  transition: color 0.3s ease;
-}
-
-.input-wrapper input {
-  width: 100%;
-  padding: 14px 14px 14px 42px; /* Espacio extra a la izquierda para el icono */
-  border: 1px solid var(--vita-border);
-  border-radius: 10px;
-  font-size: 1rem;
-  color: var(--vita-brand-dark);
-  transition: all 0.3s ease;
-  background-color: #F8FAFC;
-  outline: none;
-  font-family: 'ui-monospace', monospace; /* Fuente de código para el token */
-}
-
-/* Efecto Focus en Input y su icono */
-.input-wrapper input:focus {
-  border-color: var(--vita-brand-blue);
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
-  background-color: #FFFFFF;
-}
-
-.input-wrapper input:focus + .input-icon, 
-.input-wrapper:focus-within .input-icon {
-  color: var(--vita-brand-blue);
-}
-
-/* Mensaje de Error (Estilo Toast/Alerta sutil) */
-.vitae-login-error {
-  background-color: var(--bg-delete);
-  color: var(--text-delete);
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #FECACA;
-  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-}
-
-@keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-  40%, 60% { transform: translate3d(4px, 0, 0); }
-}
-
-/* Botón principal de acceso */
-.vitae-login-card button[type="submit"] {
-  width: 100%;
-  padding: 14px;
-  background-color: var(--vita-brand-blue);
-  color: #FFFFFF;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
-<<<<<<< HEAD
   box-shadow: 0 4px 10px rgba(0, 86, 179, 0.2);
 }
 
@@ -365,37 +186,11 @@
   cursor: not-allowed;
 }
 
-/* Animación del Spinner (Cargando) */
+/* Animación del Spinner */
 .btn-spinner {
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-=======
-  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
-}
-
-.vitae-login-card button[type="submit"]:hover:not(:disabled) {
-  background-color: var(--vita-brand-blue-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.25);
-}
-
-.vitae-login-card button[type="submit"]:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-/* Estilos de Botón Cargando */
-.vitae-login-card button:disabled {
-  background-color: #60A5FA;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.btn-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   border-top-color: #FFFFFF;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -405,28 +200,14 @@
   to { transform: rotate(360deg); }
 }
 
-<<<<<<< HEAD
 /* === FOOTER DEL LOGIN === */
 .vitae-login-footer {
   margin-top: 30px;
   color: #64748B;
-=======
-/* Footer (Links falsos) */
-.vitae-login-footer {
-  margin-top: 30px;
-  text-align: center;
-  border-top: 1px solid var(--vita-border);
-  padding-top: 20px;
-}
-
-.vitae-login-footer small {
-  color: var(--vita-text-muted);
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   font-size: 0.85rem;
 }
 
 .link-falso {
-<<<<<<< HEAD
   color: #0056B3;
   font-weight: 600;
   cursor: pointer;
@@ -436,15 +217,4 @@
 .link-falso:hover {
   text-decoration: underline;
   color: #004494;
-=======
-  color: var(--vita-brand-blue);
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.link-falso:hover {
-  color: var(--vita-brand-blue-hover);
-  text-decoration: underline;
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
 }

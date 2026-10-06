@@ -1,10 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
-<<<<<<< HEAD
 import html2pdf from 'html2pdf.js'
-=======
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
 import './TablaColaboradores.css'
 
 export default function TablaColaboradores() {
@@ -22,18 +19,11 @@ export default function TablaColaboradores() {
   const colaboradorNombre = localStorage.getItem('colaborador_nombre') || 'Colaborador'
   const colaboradorCodigo = localStorage.getItem('colaborador_codigo') || ''
   const colaboradorRol = localStorage.getItem('colaborador_rol') || 'colaborador'
-<<<<<<< HEAD
   const colaboradorId = localStorage.getItem('colaborador_id') || ''
-=======
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   const esAdmin = colaboradorRol === 'admin'
 
   const handleLogout = () => {
     localStorage.clear()
-<<<<<<< HEAD
-=======
-    // Navegación limpia con React Router en lugar de recargar la página
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
     navigate('/login')
   }
 
@@ -55,7 +45,6 @@ export default function TablaColaboradores() {
     }
   }
 
-<<<<<<< HEAD
   const formatearFecha = (fecha) => {
     if (!fecha) return 'Fecha no disponible'
     try {
@@ -163,8 +152,6 @@ export default function TablaColaboradores() {
     }
   }
 
-=======
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   const crearColaborador = async (e) => {
     e.preventDefault()
     if (!esAdmin) {
@@ -239,27 +226,6 @@ export default function TablaColaboradores() {
     window.open(qrUrl, '_blank')
   }
 
-<<<<<<< HEAD
-=======
-  const formatearFecha = (fecha) => {
-    if (!fecha) return 'Fecha no disponible'
-    try {
-      const date = new Date(fecha)
-      if (isNaN(date.getTime())) return fecha
-      return date.toLocaleString('es-ES', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      })
-    } catch {
-      return fecha
-    }
-  }
-
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
   useEffect(() => {
     cargarColaboradores()
   }, [])
@@ -267,37 +233,20 @@ export default function TablaColaboradores() {
   if (loading) {
     return (
       <div className="loader-screen">
-<<<<<<< HEAD
         <div className="loader-ring"></div>
         <h2 className="loader-title">VITAESENTIA</h2>
         <p className="loader-subtitle">Cargando datos del servidor...</p>
-=======
-        <div className="loader-ring">
-          <div className="loader-ring-inner"></div>
-        </div>
-        <h2 className="loader-title">VITAESENTIA</h2>
-        <p className="loader-subtitle">Preparando tu entorno de trabajo...</p>
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
       </div>
     )
   }
 
   if (error) {
     return (
-<<<<<<< HEAD
       <div className="error-container" style={{ padding: '50px', textAlign: 'center', color: '#0F172A' }}>
         <div className="error-card" style={{ background: '#FFFFFF', padding: '40px', borderRadius: '8px', display: 'inline-block', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
           <h3 style={{ color: '#DC2626' }}>Error de Conexión</h3>
           <p>{error}</p>
           <button className="btn-reintentar" onClick={cargarColaboradores} style={{ background: '#0056B3', color: '#FFF', border: 'none', padding: '12px 24px', borderRadius: '6px', cursor: 'pointer', marginTop: '15px', fontWeight: '600' }}>Reintentar</button>
-=======
-      <div className="error-container">
-        <div className="error-card">
-          <h3>❌ Error de Conexión</h3>
-          <p>{error}</p>
-          <p className="error-help">Verifica que el servidor esté activo.</p>
-          <button className="btn-reintentar" onClick={cargarColaboradores}>Reintentar</button>
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
         </div>
       </div>
     )
@@ -306,7 +255,6 @@ export default function TablaColaboradores() {
   return (
     <div className="container">
       <div className="header-user">
-<<<<<<< HEAD
         <h1>Panel de Colaboradores</h1>
         
         <div className="user-info">
@@ -321,22 +269,6 @@ export default function TablaColaboradores() {
           </span>
           <button className="btn-logout" onClick={handleLogout}>
             Cerrar Sesión
-=======
-        <h1>👥 Panel de Colaboradores - Vitaesentia</h1>
-        
-        <div className="user-info">
-          <span className="user-role">
-            {esAdmin ? '👑 Administrador' : '👤 Colaborador'}
-          </span>
-          <span className="user-code">
-            🔑 {colaboradorCodigo}
-          </span>
-          <span className="user-name">
-            👤 {colaboradorNombre}
-          </span>
-          <button className="btn-logout" onClick={handleLogout}>
-            🚪 Cerrar Sesión
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
           </button>
         </div>
       </div>
@@ -352,26 +284,17 @@ export default function TablaColaboradores() {
           />
           <input
             type="email"
-<<<<<<< HEAD
             placeholder="Correo electrónico"
-=======
-            placeholder="Email"
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
             value={nuevoColab.email}
             onChange={(e) => setNuevoColab({ ...nuevoColab, email: e.target.value })}
             required
           />
-<<<<<<< HEAD
           <button type="submit">Agregar</button>
-=======
-          <button type="submit">➕ Agregar Colaborador</button>
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
         </form>
       )}
 
       {!esAdmin && (
         <div className="info-message">
-<<<<<<< HEAD
           Modo de lectura activado. No es posible modificar registros.
         </div>
       )}
@@ -382,12 +305,6 @@ export default function TablaColaboradores() {
         </button>
       </div>
 
-=======
-          ℹ️ Tienes acceso de solo lectura. No puedes modificar colaboradores.
-        </div>
-      )}
-
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
       <div className="table-wrapper">
         <table className="tabla">
           <thead>
@@ -432,35 +349,22 @@ export default function TablaColaboradores() {
                   {esAdmin && (
                     <td className="codigo">
                       <span className="selectable-text">{colab.codigo_unico}</span>
-<<<<<<< HEAD
                     </td>
                   )}
                   <td>
                     <button className="btn-qr" onClick={() => generarQR(colab.codigo_unico, colab.nombre)}>
                       QR
-=======
-                     </td>
-                  )}
-                  <td>
-                    <button className="btn-qr" onClick={() => generarQR(colab.codigo_unico, colab.nombre)}>
-                      📱 QR
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
                     </button>
                   </td>
                   <td className="referidos-count">
                     <button className="btn-referidos" onClick={() => verReferidos(colab.id)}>
-<<<<<<< HEAD
                       {showReferidos === colab.id ? 'Ocultar' : 'Ver'} ({colab.total_referidos || 0})
-=======
-                      {showReferidos === colab.id ? '▲ Ocultar' : '▼ Ver'} ({colab.total_referidos || 0})
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
                     </button>
                   </td>
                   {esAdmin && (
                     <td className="acciones">
                       {editando === colab.id ? (
                         <div className="action-buttons">
-<<<<<<< HEAD
                           <button className="btn-guardar" onClick={() => guardarEdicion(colab.id)}>Guardar</button>
                           <button className="btn-cancelar" onClick={cancelarEdicion}>Cancelar</button>
                         </div>
@@ -468,15 +372,6 @@ export default function TablaColaboradores() {
                         <div className="action-buttons">
                           <button className="btn-editar" onClick={() => editarColaborador(colab)}>Editar</button>
                           <button className="btn-eliminar" onClick={() => eliminarColaborador(colab.id, colab.nombre)}>Eliminar</button>
-=======
-                          <button className="btn-guardar" onClick={() => guardarEdicion(colab.id)}>💾 Guardar</button>
-                          <button className="btn-cancelar" onClick={cancelarEdicion}>✖ Cancelar</button>
-                        </div>
-                      ) : (
-                        <div className="action-buttons">
-                          <button className="btn-editar" onClick={() => editarColaborador(colab)}>✏ Editar</button>
-                          <button className="btn-eliminar" onClick={() => eliminarColaborador(colab.id, colab.nombre)}>🗑 Eliminar</button>
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
                         </div>
                       )}
                     </td>
@@ -486,7 +381,6 @@ export default function TablaColaboradores() {
                   <tr className="referidos-row">
                     <td colSpan={esAdmin ? 7 : 5}>
                       <div className="subtabla">
-<<<<<<< HEAD
                         <h4>Referidos de {colab.nombre}</h4>
                         {referidos[colab.id]?.length === 0 ? (
                           <p className="no-referidos" style={{ color: '#64748B', fontSize: '0.85rem' }}>No se encontraron registros.</p>
@@ -504,31 +398,11 @@ export default function TablaColaboradores() {
                                   <th style={{ padding: '10px 15px', textAlign: 'left' }}>Email</th>
                                   <th style={{ padding: '10px 15px', textAlign: 'left' }}>Teléfono</th>
                                   <th style={{ padding: '10px 15px', textAlign: 'left' }}>SO / Navegador</th>
-=======
-                        <h4>📋 Referidos de {colab.nombre}</h4>
-                        {referidos[colab.id]?.length === 0 ? (
-                          <p className="no-referidos">Aún no hay referidos registrados.</p>
-                        ) : (
-                          <div className="subtable-wrapper">
-                            <table className="tabla-referidos">
-                              <thead>
-                                <tr>
-                                  <th>Fecha</th>
-                                  <th>IP</th>
-                                  <th>País</th>
-                                  <th>Ciudad</th>
-                                  <th>Nombre</th>
-                                  <th>Apellido</th>
-                                  <th>Email</th>
-                                  <th>Teléfono</th>
-                                  <th>SO / Navegador</th>
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
                                 </tr>
                               </thead>
                               <tbody>
                                 {referidos[colab.id]?.map(ref => (
                                   <tr key={ref.id}>
-<<<<<<< HEAD
                                     <td className="selectable-text" style={{ padding: '12px 15px' }}>{formatearFecha(ref.fecha_scan)}</td>
                                     <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.ip_address || 'No registrada'}</td>
                                     <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.pais || 'No disponible'}</td>
@@ -538,17 +412,6 @@ export default function TablaColaboradores() {
                                     <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.referido_email || '-'}</td>
                                     <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.referido_telefono || '-'}</td>
                                     <td className="user-agent selectable-text" style={{ padding: '12px 15px' }}>
-=======
-                                    <td className="selectable-text">{formatearFecha(ref.fecha_scan)}</td>
-                                    <td className="selectable-text">{ref.ip_address || 'No registrada'}</td>
-                                    <td className="selectable-text">{ref.pais || 'No disponible'}</td>
-                                    <td className="selectable-text">{ref.ciudad || 'No disponible'}</td>
-                                    <td className="selectable-text">{ref.referido_nombre || '-'}</td>
-                                    <td className="selectable-text">{ref.referido_apellido || '-'}</td>
-                                    <td className="selectable-text">{ref.referido_email || '-'}</td>
-                                    <td className="selectable-text">{ref.referido_telefono || '-'}</td>
-                                    <td className="user-agent selectable-text">
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
                                       {ref.sistema_operativo || '?'} / {ref.navegador || '?'}
                                     </td>
                                   </tr>
@@ -558,27 +421,19 @@ export default function TablaColaboradores() {
                           </div>
                         )}
                       </div>
-<<<<<<< HEAD
                     </td>
                   </tr>
-=======
-                     </td>
-                   </tr>
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
                 )}
               </Fragment>
             ))}
           </tbody>
         </table>
       </div>
-<<<<<<< HEAD
 
       <div className="footer-copyright">
         <p>© 2026 igrafic360 - Sistema de Referidos. Todos los derechos reservados.</p>
         <p>Desarrollado por <a href="https://igrafic360.net" target="_blank" rel="noopener noreferrer">igrafic360.net</a></p>
       </div>
-=======
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
     </div>
   )
 }
