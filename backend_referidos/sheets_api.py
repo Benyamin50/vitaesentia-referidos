@@ -40,3 +40,19 @@ def registrar_referido(data):
         **data
     }, timeout=10)
     return res.json()
+
+def editar_colaborador(id, nombre, email):
+    res = requests.post(APPS_SCRIPT_URL, json={
+        'action': 'editarColaborador',
+        'id': id,
+        'nombre': nombre,
+        'email': email
+    }, timeout=10)
+    return res.json()
+
+def eliminar_colaborador(id):
+    res = requests.post(APPS_SCRIPT_URL, json={
+        'action': 'eliminarColaborador',
+        'id': id
+    }, timeout=10)
+    return res.json()
