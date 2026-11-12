@@ -75,10 +75,10 @@ def register_qr_routes(app):
                 
                 token = secrets.token_urlsafe(32)
                 
-                # Enviamos a Google Sheets
+                # IMPORTANTE: Aquí usamos 'ip' tal como lo espera tu Google Apps Script
                 data_referido = {
                     "colaborador_id": ref,
-                    "ip_address": ip,
+                    "ip": ip,  # <--- CORREGIDO AQUÍ
                     "user_agent": user_agent,
                     "pais": pais,
                     "ciudad": ciudad,
@@ -92,7 +92,11 @@ def register_qr_routes(app):
                     "video_token": token
                 }
                 
-                registrar_referido(data_referido)
+                try:
+                    respuesta = registrar_referido(data_referido)
+                    print("Respuesta de Google Sheets:", respuesta) # Para debug
+                except Exception as e:
+                    print("Error guardando en Sheets:", e)
                 
                 return f'''
                 <!DOCTYPE html>
@@ -153,6 +157,4 @@ def register_qr_routes(app):
         token = request.args.get('token', '')
         if not token:
             return jsonify({"valido": False}), 400
-            
-        # Aquí podrías verificar en Google Sheets, pero por ahora devolvemos True
         return jsonify({"valido": True})
