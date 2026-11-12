@@ -75,10 +75,9 @@ def register_qr_routes(app):
                 
                 token = secrets.token_urlsafe(32)
                 
-                # IMPORTANTE: Aquí usamos 'ip' tal como lo espera tu Google Apps Script
                 data_referido = {
                     "colaborador_id": ref,
-                    "ip": ip,  # <--- CORREGIDO AQUÍ
+                    "ip": ip,
                     "user_agent": user_agent,
                     "pais": pais,
                     "ciudad": ciudad,
@@ -94,17 +93,18 @@ def register_qr_routes(app):
                 
                 try:
                     respuesta = registrar_referido(data_referido)
-                    print("Respuesta de Google Sheets:", respuesta) # Para debug
+                    print("Respuesta de Google Sheets:", respuesta)
                 except Exception as e:
                     print("Error guardando en Sheets:", e)
                 
+                # AQUÍ ESTÁ LA REDIRECCIÓN CORREGIDA
                 return f'''
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <meta charset="UTF-8">
                     <script>
-                        window.location.href = 'https://igrafic360.net/VitaesentiaRef/videos?token={token}';
+                        window.location.href = 'https://www.vitaesentia.com/vitaesentiaref/videos-referidos?token={token}';
                     </script>
                 </head>
                 <body style="font-family: sans-serif; text-align: center; padding: 50px; color: #64748B;">
@@ -142,7 +142,7 @@ def register_qr_routes(app):
                 <div class="referido-por">Has sido invitado por: <strong>{nombre_colaborador}</strong></div>
                 <form method="POST">
                     <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" required></div>
-                    <div class="form-group"><label>Apellido(s)</label><input type="text" name="apellido" required></div>
+                    <div class="form-group"><label>Apellido(s)</label><input type="email" name="apellido" required></div>
                     <div class="form-group"><label>Correo Electronico</label><input type="email" name="email" required></div>
                     <div class="form-group"><label>Telefono</label><input type="tel" name="telefono" required></div>
                     <button type="submit" class="btn-submit">Enviar mis datos</button>
