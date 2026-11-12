@@ -20,7 +20,6 @@ export default function TablaColaboradores() {
   const colaboradorNombre = localStorage.getItem('colaborador_nombre') || 'Colaborador'
   const colaboradorCodigo = localStorage.getItem('colaborador_codigo') || ''
   const colaboradorRol = localStorage.getItem('colaborador_rol') || 'colaborador'
-  const colaboradorId = localStorage.getItem('colaborador_id') || ''
   const esAdmin = colaboradorRol === 'admin'
 
   const handleLogout = () => {
@@ -66,7 +65,8 @@ export default function TablaColaboradores() {
 
   const exportarPDF = async () => {
     try {
-      const data = await api.getReferidos(colaboradorId)
+      // Usamos el código del colaborador logueado
+      const data = await api.getReferidos(colaboradorCodigo)
       
       if (!data || data.length === 0) {
         alert('No hay referidos para exportar')
@@ -207,14 +207,14 @@ export default function TablaColaboradores() {
     setEditForm({ nombre: '', email: '' })
   }
 
-  const verReferidos = async (colabId) => {
-    if (showReferidos === colabId) {
+  const verReferidos = async (colabCodigo) => {
+    if (showReferidos === colabCodigo) {
       setShowReferidos(null)
     } else {
       try {
-        const data = await api.getReferidos(colabId)
-        setReferidos({ ...referidos, [colabId]: data })
-        setShowReferidos(colabId)
+        const data = await api.getReferidos(colabCodigo)
+        setReferidos({ ...referidos, [colabCodigo]: data })
+        setShowReferidos(colabCodigo)
       } catch (err) {
         alert('Error al cargar referidos')
       }
@@ -256,62 +256,31 @@ export default function TablaColaboradores() {
   return (
     <div className="container">
       <div className="logo-top">
-        <img 
-          src={logoVitaesentia} 
-          alt="Vitaesentia" 
-          className="logo-panel"
-        />
+        <img src={logoVitaesentia} alt="Vitaesentia" className="logo-panel" />
       </div>
 
       <div className="header-user">
         <h1>Panel de Colaboradores</h1>
-        
         <div className="user-info">
-          <span className="user-role">
-            {esAdmin ? 'Administrador' : 'Colaborador'}
-          </span>
-          <span className="user-code">
-            {colaboradorCodigo}
-          </span>
-          <span className="user-name">
-            {colaboradorNombre}
-          </span>
-          <button className="btn-logout" onClick={handleLogout}>
-            Cerrar Sesión
-          </button>
+          <span className="user-role">{esAdmin ? 'Administrador' : 'Colaborador'}</span>
+          <span className="user-code">{colaboradorCodigo}</span>
+          <span className="user-name">{colaboradorNombre}</span>
+          <button className="btn-logout" onClick={handleLogout}>Cerrar Sesión</button>
         </div>
       </div>
 
       {esAdmin && (
         <form className="form-nuevo" onSubmit={crearColaborador}>
-          <input
-            type="text"
-            placeholder="Nombre completo"
-            value={nuevoColab.nombre}
-            onChange={(e) => setNuevoColab({ ...nuevoColab, nombre: e.target.value })}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={nuevoColab.email}
-            onChange={(e) => setNuevoColab({ ...nuevoColab, email: e.target.value })}
-            required
-          />
+          <input type="text" placeholder="Nombre completo" value={nuevoColab.nombre} onChange={(e) => setNuevoColab({ ...nuevoColab, nombre: e.target.value })} required />
+          <input type="email" placeholder="Correo electrónico" value={nuevoColab.email} onChange={(e) => setNuevoColab({ ...nuevoColab, email: e.target.value })} required />
           <button type="submit">Agregar</button>
         </form>
       )}
 
-      {!esAdmin && (
-        <div className="info-message">
-          Modo de lectura activado. No es posible modificar registros.
-        </div>
-      )}
+      {!esAdmin && <div className="info-message">Modo de lectura activado. No es posible modificar registros.</div>}
 
       <div className="export-pdf-container">
-        <button className="btn-pdf" onClick={exportarPDF}>
-          Descargar PDF
-        </button>
+        <button className="btn-pdf" onClick={exportarPDF}>Descargar PDF</button>
       </div>
 
       <div className="table-wrapper">
@@ -334,40 +303,28 @@ export default function TablaColaboradores() {
                   <td>{colab.id}</td>
                   <td className="nombre">
                     {editando === colab.id && esAdmin ? (
-                      <input
-                        value={editForm.nombre}
-                        onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
-                        style={{ width: '100%', padding: '6px' }}
-                        autoFocus
-                      />
+                      <input value={editForm.nombre} onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })} style={{ width: '100%', padding: '6px' }} autoFocus />
                     ) : (
                       <span className="selectable-text">{colab.nombre}</span>
                     )}
                   </td>
                   <td>
                     {editando === colab.id && esAdmin ? (
-                      <input
-                        value={editForm.email}
-                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                        style={{ width: '100%', padding: '6px' }}
-                      />
+                      <input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} style={{ width: '100%', padding: '6px' }} />
                     ) : (
                       <span className="selectable-text">{colab.email}</span>
                     )}
                   </td>
                   {esAdmin && (
-                    <td className="codigo">
-                      <span className="selectable-text">{colab.codigo_unico}</span>
-                    </td>
+                    <td className="codigo"><span className="selectable-text">{colab.codigo_unico}</span></td>
                   )}
                   <td>
-                    <button className="btn-qr" onClick={() => generarQR(colab.codigo_unico, colab.nombre)}>
-                      QR
-                    </button>
+                    <button className="btn-qr" onClick={() => generarQR(colab.codigo_unico, colab.nombre)}>QR</button>
                   </td>
                   <td className="referidos-count">
-                    <button className="btn-referidos" onClick={() => verReferidos(colab.id)}>
-                      {showReferidos === colab.id ? 'Ocultar' : 'Ver'} ({colab.total_referidos || 0})
+                    {/* CAMBIO AQUÍ: Usamos colab.codigo_unico para el botón y para comparar */}
+                    <button className="btn-referidos" onClick={() => verReferidos(colab.codigo_unico)}>
+                      {showReferidos === colab.codigo_unico ? 'Ocultar' : 'Ver'} ({colab.total_referidos || 0})
                     </button>
                   </td>
                   {esAdmin && (
@@ -386,12 +343,13 @@ export default function TablaColaboradores() {
                     </td>
                   )}
                 </tr>
-                {showReferidos === colab.id && (
+                {/* CAMBIO AQUÍ: Mostramos la subtabla usando colab.codigo_unico */}
+                {showReferidos === colab.codigo_unico && (
                   <tr className="referidos-row">
                     <td colSpan={esAdmin ? 7 : 5}>
                       <div className="subtabla">
                         <h4>Referidos de {colab.nombre}</h4>
-                        {referidos[colab.id]?.length === 0 ? (
+                        {referidos[colab.codigo_unico]?.length === 0 ? (
                           <p className="no-referidos" style={{ color: '#64748B', fontSize: '0.85rem' }}>No se encontraron registros.</p>
                         ) : (
                           <div className="subtable-wrapper">
@@ -410,7 +368,7 @@ export default function TablaColaboradores() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {referidos[colab.id]?.map(ref => (
+                                {referidos[colab.codigo_unico]?.map(ref => (
                                   <tr key={ref.id}>
                                     <td className="selectable-text" style={{ padding: '12px 15px' }}>{formatearFecha(ref.fecha_scan)}</td>
                                     <td className="selectable-text" style={{ padding: '12px 15px' }}>{ref.ip_address || 'No registrada'}</td>

@@ -6,6 +6,10 @@ from sheets_api import verificar_colaborador, registrar_referido
 
 def obtener_geolocalizacion(ip):
     try:
+        # Si la IP es local, no intentes buscar (para que no dé error)
+        if not ip or ip == '127.0.0.1' or ip.startswith('192.168.') or ip.startswith('10.'):
+            return '', ''
+            
         response = requests.get(f'http://ip-api.com/json/{ip}?fields=status,country,city', timeout=3)
         if response.status_code == 200:
             data = response.json()
@@ -54,7 +58,6 @@ def register_qr_routes(app):
         nombre_colaborador = 'nuestro equipo'
         mensaje = None
         
-        # Verificamos con Google Sheets
         colab_info = verificar_colaborador(ref)
         if colab_info.get("valido"):
             nombre_colaborador = colab_info.get("nombre", "nuestro equipo")
@@ -68,7 +71,12 @@ def register_qr_routes(app):
             if not referido_nombre or not referido_apellido or not referido_email or not referido_telefono:
                 mensaje = "Por favor complete todos los campos."
             else:
-                ip = request.remote_addr
+                # AQUÍ ESTÁ EL TRUCO PARA OBTENER LA IP REAL DETRÁS DEL PROXY
+                if request.headers.get('X-Forwarded-For'):
+                    ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+                else:
+                    ip = request.remote_addr
+                
                 user_agent = request.headers.get('User-Agent', '')
                 pais, ciudad = obtener_geolocalizacion(ip)
                 tipo_dispositivo, sistema_op, navegador = analizar_user_agent(user_agent)
@@ -92,12 +100,10 @@ def register_qr_routes(app):
                 }
                 
                 try:
-                    respuesta = registrar_referido(data_referido)
-                    print("Respuesta de Google Sheets:", respuesta)
+                    registrar_referido(data_referido)
                 except Exception as e:
                     print("Error guardando en Sheets:", e)
                 
-                # Redirección al nuevo dominio
                 return f'''
                 <!DOCTYPE html>
                 <html>
