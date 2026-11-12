@@ -1,7 +1,13 @@
 from flask import jsonify, request
 from functools import wraps
 import secrets
-from sheets_api import get_colaboradores, crear_colaborador, verificar_colaborador
+from sheets_api import (
+    get_colaboradores, 
+    crear_colaborador, 
+    verificar_colaborador, 
+    editar_colaborador, 
+    eliminar_colaborador
+)
 
 # ============================================
 # DECORADOR DE AUTENTICACIÓN (Temporal)
@@ -51,12 +57,22 @@ def register_colaboradores_routes(app):
 
     @app.route('/colaboradores/<int:colab_id>', methods=['PUT'])
     def editar_colaborador_route(colab_id):
-        # NOTA: Aquí falta implementar la lógica para editar en Google Sheets.
-        # Por ahora devolvemos un OK para que el frontend no falle.
-        return jsonify({"message": "Actualizado correctamente"})
+        data = request.json
+        if not data:
+            return jsonify({"error": "Datos requeridos"}), 400
+        
+        # AQUÍ LLAMAMOS A LA FUNCIÓN REAL QUE VA A GOOGLE SHEETS
+        resultado = editar_colaborador(colab_id, data.get('nombre'), data.get('email'))
+        
+        if resultado.get('success'):
+            return jsonify({"message": "Actualizado correctamente"})
+        return jsonify({"error": resultado.get('error', 'Error al actualizar')}), 400
 
     @app.route('/colaboradores/<int:colab_id>', methods=['DELETE'])
     def eliminar_colaborador_route(colab_id):
-        # NOTA: Aquí falta implementar la lógica para eliminar en Google Sheets.
-        # Por ahora devolvemos un OK para que el frontend no falle.
-        return jsonify({"message": "Eliminado correctamente"})
+        # AQUÍ LLAMAMOS A LA FUNCIÓN REAL QUE VA A GOOGLE SHEETS
+        resultado = eliminar_colaborador(colab_id)
+        
+        if resultado.get('success'):
+            return jsonify({"message": "Eliminado correctamente"})
+        return jsonify({"error": resultado.get('error', 'Error al eliminar')}), 400
