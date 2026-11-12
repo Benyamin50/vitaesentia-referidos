@@ -13,6 +13,7 @@ export default function TablaColaboradores() {
   const [error, setError] = useState(null)
   const [showReferidos, setShowReferidos] = useState(null)
   const [referidos, setReferidos] = useState({})
+  const [guardandoReferidos, setGuardandoReferidos] = useState({})
   const [nuevoColab, setNuevoColab] = useState({ nombre: '', email: '' })
   const [editando, setEditando] = useState(null)
   const [editForm, setEditForm] = useState({ nombre: '', email: '' })
@@ -207,13 +208,47 @@ export default function TablaColaboradores() {
     setEditForm({ nombre: '', email: '' })
   }
 
+  const actualizarReferidoLocal = (codigo, id, campo, valor) => {
+    setReferidos(prev => ({
+      ...prev,
+      [codigo]: (prev[codigo] || []).map(ref =>
+        ref.id === id ? { ...ref, [campo]: valor } : ref
+      )
+    }))
+  }
+
+  const guardarReferido = async (referido) => {
+    if (!esAdmin || guardandoReferidos[referido.id]) return
+
+    setGuardandoReferidos(prev => ({
+      ...prev,
+      [referido.id]: true
+    }))
+
+    try {
+      await api.editarReferido(referido.id, {
+        estado: referido.estado || '',
+        observaciones: referido.observaciones || ''
+      })
+
+      alert('Cambios guardados correctamente')
+    } catch (err) {
+      alert('No se guardaron los cambios: ' + err.message)
+    } finally {
+      setGuardandoReferidos(prev => ({
+        ...prev,
+        [referido.id]: false
+      }))
+    }
+  }
+
   const verReferidos = async (colabCodigo) => {
     if (showReferidos === colabCodigo) {
       setShowReferidos(null)
     } else {
       try {
         const data = await api.getReferidos(colabCodigo)
-        setReferidos({ ...referidos, [colabCodigo]: data })
+        setReferidos(prev => ({ ...prev, [colabCodigo]: data }))
         setShowReferidos(colabCodigo)
       } catch (err) {
         alert('Error al cargar referidos')
@@ -365,6 +400,13 @@ export default function TablaColaboradores() {
                                   <th style={{ padding: '10px 15px', textAlign: 'left' }}>Email</th>
                                   <th style={{ padding: '10px 15px', textAlign: 'left' }}>Teléfono</th>
                                   <th style={{ padding: '10px 15px', textAlign: 'left' }}>SO / Navegador</th>
+                                  {esAdmin && (
+                                    <>
+                                      <th>Estado</th>
+                                      <th>Observaciones</th>
+                                      <th>Guardar</th>
+                                    </>
+                                  )}
                                 </tr>
                               </thead>
                               <tbody>
@@ -381,6 +423,60 @@ export default function TablaColaboradores() {
                                     <td className="user-agent selectable-text" style={{ padding: '12px 15px' }}>
                                       {ref.sistema_operativo || '?'} / {ref.navegador || '?'}
                                     </td>
+                                    {esAdmin && (
+                                      <>
+                                        <td style={{ padding: '12px 15px' }}>
+                                          <select
+                                            className="referido-estado"
+                                            aria-label="Estado del referido"
+                                            value={ref.estado || ''}
+                                            disabled={!!guardandoReferidos[ref.id]}
+                                            onChange={e => actualizarReferidoLocal(
+                                              colab.codigo_unico,
+                                              ref.id,
+                                              'estado',
+                                              e.target.value
+                                            )}
+                                          >
+                                            <option value="">Sin estado</option>
+                                            <option value="Agendado">Agendado</option>
+                                            <option value="Cocinado">Cocinado</option>
+                                            <option value="Vendido">Vendido</option>
+                                            <option value="Contactado">Contactado</option>
+                                          </select>
+                                        </td>
+
+                                        <td style={{ padding: '12px 15px' }}>
+                                          <textarea
+                                            className="referido-observaciones"
+                                            aria-label="Observaciones del referido"
+                                            rows={3}
+                                            maxLength={5000}
+                                            value={ref.observaciones || ''}
+                                            disabled={!!guardandoReferidos[ref.id]}
+                                            onChange={e => actualizarReferidoLocal(
+                                              colab.codigo_unico,
+                                              ref.id,
+                                              'observaciones',
+                                              e.target.value
+                                            )}
+                                          />
+                                        </td>
+
+                                        <td style={{ padding: '12px 15px' }}>
+                                          <button
+                                            type="button"
+                                            className="btn-guardar"
+                                            disabled={!!guardandoReferidos[ref.id]}
+                                            onClick={() => guardarReferido(ref)}
+                                          >
+                                            {guardandoReferidos[ref.id]
+                                              ? 'Guardando...'
+                                              : 'Guardar'}
+                                          </button>
+                                        </td>
+                                      </>
+                                    )}
                                   </tr>
                                 ))}
                               </tbody>

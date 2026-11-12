@@ -3,7 +3,7 @@ import os
 
 APPS_SCRIPT_URL = os.environ.get(
     'APPS_SCRIPT_URL', 
-    'https://script.google.com/macros/s/AKfycbx9qC3Rn_g3NCJ_NsplBd1yr8ngPaBo0vZaSMjFBi-ep6o922awUSlcvEFSeQMyb5EzZg/exec'
+    'https://script.google.com/macros/s/AKfycbySA-A0_2jhjLfVJI6pquuzdYndXy0bMAQ1s3dLN8k7O6qsdL-ZGyDyjUyjw5tTkfsxBw/exec'
 )
 
 def get_colaboradores():
@@ -40,6 +40,31 @@ def registrar_referido(data):
         **data
     }, timeout=10)
     return res.json()
+
+def editar_referido(referido_id, estado, observaciones):
+    secreto = os.environ.get('APPS_SCRIPT_EDIT_SECRET')
+    if not secreto:
+        raise RuntimeError('Falta configurar APPS_SCRIPT_EDIT_SECRET')
+
+    res = requests.post(
+        APPS_SCRIPT_URL,
+        json={
+            'action': 'editarReferido',
+            'id': referido_id,
+            'estado': estado,
+            'observaciones': observaciones,
+            'edit_secret': secreto
+        },
+        timeout=15
+    )
+
+    res.raise_for_status()
+    resultado = res.json()
+
+    if not isinstance(resultado, dict):
+        raise ValueError('Respuesta inválida de Apps Script')
+
+    return resultado
 
 def editar_colaborador(id, nombre, email):
     res = requests.post(APPS_SCRIPT_URL, json={

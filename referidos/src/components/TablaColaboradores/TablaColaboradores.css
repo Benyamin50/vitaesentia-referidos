@@ -389,3 +389,27 @@ td input {
   z-index: 1;
   background-color: var(--bg-element);
 }
+
+.tabla-referidos .referido-estado,
+.tabla-referidos .referido-observaciones {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  font: inherit;
+}
+
+.tabla-referidos .referido-estado {
+  min-width: 145px;
+}
+
+.tabla-referidos .referido-observaciones {
+  min-width: 240px;
+  resize: vertical;
+}
+
+.tabla-referidos button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

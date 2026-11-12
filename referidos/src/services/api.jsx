@@ -72,6 +72,18 @@ export const api = {
     return handleResponse(response);
   },
 
+  async editarReferido(id, data) {
+    const response = await fetch(
+      `${API_BASE_URL}/referidos/${encodeURIComponent(id)}`,
+      {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+      }
+    );
+    return handleResponse(response);
+  },
+
   async eliminarColaborador(id) {
     const response = await fetch(`${API_BASE_URL}/colaboradores/${id}`, {
       method: 'DELETE',

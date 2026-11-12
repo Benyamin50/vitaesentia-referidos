@@ -1,12 +1,14 @@
 from flask import jsonify, request
 from functools import wraps
+from requests import RequestException
 import secrets
 from sheets_api import (
     get_colaboradores, 
     crear_colaborador, 
     verificar_colaborador, 
     editar_colaborador, 
-    eliminar_colaborador
+    eliminar_colaborador,
+    editar_referido
 )
 
 # ============================================
@@ -76,3 +78,59 @@ def register_colaboradores_routes(app):
         if resultado.get('success'):
             return jsonify({"message": "Eliminado correctamente"})
         return jsonify({"error": resultado.get('error', 'Error al eliminar')}), 400
+
+    @app.route('/referidos/<string:referido_id>', methods=['PUT'])
+    def editar_referido_route(referido_id):
+        autorizacion = request.headers.get('Authorization', '').split()
+
+        if len(autorizacion) != 2 or autorizacion[0].lower() != 'bearer':
+            return jsonify({"error": "Autenticación requerida"}), 401
+
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict):
+            return jsonify({"error": "Se requiere un objeto JSON"}), 400
+
+        estado = data.get('estado')
+        observaciones = data.get('observaciones')
+        estados_permitidos = {
+            '', 'Agendado', 'Cocinado', 'Vendido', 'Contactado'
+        }
+
+        if not isinstance(estado, str) or estado not in estados_permitidos:
+            return jsonify({"error": "Estado inválido"}), 400
+
+        if not isinstance(observaciones, str) or len(observaciones) > 5000:
+            return jsonify({
+                "error": "Las observaciones deben tener hasta 5000 caracteres"
+            }), 400
+
+        try:
+            usuario = verificar_colaborador(autorizacion[1])
+
+            if not usuario.get('valido'):
+                return jsonify({"error": "Código inválido"}), 401
+
+            if usuario.get('rol') != 'admin':
+                return jsonify({
+                    "error": "Solo el administrador puede editar referidos"
+                }), 403
+
+            resultado = editar_referido(
+                referido_id,
+                estado,
+                observaciones
+            )
+        except (RequestException, ValueError, RuntimeError):
+            app.logger.exception('Error al editar referido')
+            return jsonify({
+                "error": "No se pudo completar el guardado. Intenta nuevamente."
+            }), 502
+
+        if not resultado.get('success'):
+            status = 404 if resultado.get('code') == 'NOT_FOUND' else 502
+            return jsonify({
+                "error": resultado.get('error', 'Error al guardar')
+            }), status
+
+        return jsonify(resultado)
