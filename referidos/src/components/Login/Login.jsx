@@ -33,8 +33,19 @@ export default function Login() {
       }
 
       if (data.valido) {
+        const codigoVerificado = [data.codigo, data.codigo_unico].find(valor =>
+          typeof valor === 'string' &&
+          valor.trim() !== '' &&
+          valor.trim() !== 'undefined' &&
+          valor.trim() !== 'null'
+        )?.trim()
+
+        if (!codigoVerificado) {
+          throw new Error('El servidor no devolvió un código de acceso válido. Intenta nuevamente.')
+        }
+
         localStorage.setItem('admin_token', 'authenticated')
-        localStorage.setItem('colaborador_codigo', data.codigo)
+        localStorage.setItem('colaborador_codigo', codigoVerificado)
         localStorage.setItem('colaborador_nombre', data.nombre)
         localStorage.setItem('colaborador_id', data.id)
         localStorage.setItem('colaborador_email', data.email)
