@@ -1,5 +1,5 @@
-// ✅ Para desarrollo (React en localhost, API en cPanel)
-const API_BASE_URL = 'https://igrafic360.net/referidos-api';
+// ✅ API de Referidos en Render
+const API_BASE_URL = 'https://vitaesentia-backend.onrender.com';
 
 // Obtener el código del colaborador desde localStorage
 const getAuthHeaders = () => {
@@ -17,15 +17,13 @@ const getAuthHeaders = () => {
 // Función auxiliar para manejar errores
 const handleResponse = async (response) => {
   if (response.status === 401) {
-    // No autorizado - redirigir al login
     localStorage.removeItem('admin_token');
     localStorage.removeItem('colaborador_codigo');
     localStorage.removeItem('colaborador_nombre');
     localStorage.removeItem('colaborador_rol');
     localStorage.removeItem('colaborador_id');
     localStorage.removeItem('colaborador_email');
-    // ✅ CAMBIA ESTA LÍNEA:
-    window.location.href = '/VitaesentiaRef/login';
+    window.location.href = '/vitaesentiaref/login';
     throw new Error('Sesión expirada. Inicia sesión nuevamente.');
   }
   

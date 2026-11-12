@@ -362,3 +362,16 @@ td input {
 
 .footer-copyright a { color: var(--accent-color); text-decoration: none; font-weight: 500; }
 .footer-copyright a:hover { text-decoration: underline; }
+.logo-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 45px;
+  padding-bottom: 20px;
+}
+
+.logo-panel {
+  width: 180px;
+  height: auto;
+  object-fit: contain;
+}

@@ -4,12 +4,46 @@ dist/
 .DS_Store
 *.log
 *.lock
-<<<<<<< HEAD
 .idea/
-=======
+config.bat
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Variables de entorno
+.env
+.env.local
+
+# Logs
+*.log
+stderr.log
+
+# Carpetas innecesarias
+public/
+tmp/
 .idea/
+.vscode/
+
+# Archivos temporales
 branch_structure.json
 temp_auto_push.bat
 temp_interactive_push.bat
->>>>>>> 3d89107d0615188c8d63016ad7e02ce8520b4285
-config.bat
+*.lock
+
+# Node (si algún día lo usas)
+node_modules/
+build/
+dist/
+
+# Archivos comprimidos
+*.zip

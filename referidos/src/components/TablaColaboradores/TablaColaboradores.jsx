@@ -2,6 +2,7 @@ import { useState, useEffect, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import html2pdf from 'html2pdf.js'
+import logoVitaesentia from '../../assets/vitaesentia-logo.png'
 import './TablaColaboradores.css'
 
 export default function TablaColaboradores() {
@@ -221,7 +222,7 @@ export default function TablaColaboradores() {
   }
 
   const generarQR = (codigo, nombre) => {
-    const url = `https://igrafic360.net/referidos-api/qr?ref=${codigo}&nombre=${encodeURIComponent(nombre)}`
+    const url = `https://vitaesentia-backend.onrender.com/qr?ref=${codigo}&nombre=${encodeURIComponent(nombre)}`
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`
     window.open(qrUrl, '_blank')
   }
@@ -254,6 +255,15 @@ export default function TablaColaboradores() {
 
   return (
     <div className="container">
+      {/* LOGO ARRIBA, CENTRADO */}
+      <div className="logo-top">
+        <img 
+          src={logoVitaesentia} 
+          alt="Vitaesentia" 
+          className="logo-panel"
+        />
+      </div>
+
       <div className="header-user">
         <h1>Panel de Colaboradores</h1>
         

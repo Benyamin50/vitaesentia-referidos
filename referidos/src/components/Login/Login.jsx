@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
+import logoVitaesentia from '../../assets/vitaesentia-logo.png'
 import './Login.css'
 
 export default function Login() {
@@ -56,6 +57,7 @@ export default function Login() {
       <div className="vitae-login-glow"></div>
 
       <div className="vitae-login-card">
+        {/* Candado */}
         <div className="vitae-login-brand">
           <div className="vitae-logo-circle">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -65,7 +67,15 @@ export default function Login() {
           </div>
         </div>
 
-        <h1>Vitaesentia</h1>
+        {/* Logo de Vitaesentia en lugar del h1 */}
+        <div className="vitae-login-logo">
+          <img 
+            src={logoVitaesentia} 
+            alt="Vitaesentia" 
+            className="vitae-logo-img"
+          />
+        </div>
+
         <p className="login-subtitle">Panel de Control de Colaboradores</p>
 
         <form onSubmit={handleSubmit}>
