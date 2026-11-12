@@ -27,7 +27,7 @@ export default function PaginaVideos() {
     // 4. Guardar token en localStorage y verificar con backend
     localStorage.setItem('video_token', token)
     
-    fetch(`https://vitaesentia-backend.onrender.com/verificar-token?token=${token}`)
+    fetch(`https://vitaesentia-referidos.onrender.com/verificar-token?token=${token}`)
       .then(res => res.json())
       .then(data => {
         if (data.valido) {

@@ -1,5 +1,5 @@
 // ✅ API de Referidos en Render
-const API_BASE_URL = 'https://vitaesentia-backend.onrender.com';
+const API_BASE_URL = 'https://vitaesentia-referidos.onrender.com';
 
 // Obtener el código del colaborador desde localStorage
 const getAuthHeaders = () => {

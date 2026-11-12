@@ -222,7 +222,7 @@ export default function TablaColaboradores() {
   }
 
   const generarQR = (codigo, nombre) => {
-    const url = `https://vitaesentia-backend.onrender.com/qr?ref=${codigo}&nombre=${encodeURIComponent(nombre)}`
+    const url = `https://vitaesentia-referidos.onrender.com/qr?ref=${codigo}&nombre=${encodeURIComponent(nombre)}`
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`
     window.open(qrUrl, '_blank')
   }
@@ -255,7 +255,6 @@ export default function TablaColaboradores() {
 
   return (
     <div className="container">
-      {/* LOGO ARRIBA, CENTRADO */}
       <div className="logo-top">
         <img 
           src={logoVitaesentia} 
