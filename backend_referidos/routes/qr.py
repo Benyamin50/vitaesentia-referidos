@@ -97,7 +97,7 @@ def register_qr_routes(app):
                 except Exception as e:
                     print("Error guardando en Sheets:", e)
                 
-                # AQUÍ ESTÁ LA REDIRECCIÓN CORREGIDA
+                # Redirección al nuevo dominio
                 return f'''
                 <!DOCTYPE html>
                 <html>
@@ -142,7 +142,7 @@ def register_qr_routes(app):
                 <div class="referido-por">Has sido invitado por: <strong>{nombre_colaborador}</strong></div>
                 <form method="POST">
                     <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" required></div>
-                    <div class="form-group"><label>Apellido(s)</label><input type="email" name="apellido" required></div>
+                    <div class="form-group"><label>Apellido(s)</label><input type="text" name="apellido" required></div>
                     <div class="form-group"><label>Correo Electronico</label><input type="email" name="email" required></div>
                     <div class="form-group"><label>Telefono</label><input type="tel" name="telefono" required></div>
                     <button type="submit" class="btn-submit">Enviar mis datos</button>
