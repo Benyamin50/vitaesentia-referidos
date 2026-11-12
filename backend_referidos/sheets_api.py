@@ -3,7 +3,7 @@ import os
 
 APPS_SCRIPT_URL = os.environ.get(
     'APPS_SCRIPT_URL', 
-    'https://script.google.com/macros/s/AKfycbyRhS8IH_1Z0Ts5V4bsbya91AyMLfuzqYSh-OoldV8WKyHCSNcHsq2ZGHYlq1FwI63Brg/exec'
+    'https://script.google.com/macros/s/AKfycbyIuMBQa2xXJpATybBYg_DBp4wDUkC-SJJ7Tm5Ws6pEC7bZKo0KM-S2C30g8Ix0QDXlZA/exec'
 )
 
 def get_colaboradores():
