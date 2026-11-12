@@ -70,6 +70,8 @@ def register_qr_routes(app):
             
             if not referido_nombre or not referido_apellido or not referido_email or not referido_telefono:
                 mensaje = "Por favor complete todos los campos."
+            elif request.form.get('acepto_datos') != '1':
+                mensaje = "Debes aceptar la política de protección de datos para continuar."
             else:
                 # AQUÍ ESTÁ EL TRUCO PARA OBTENER LA IP REAL DETRÁS DEL PROXY
                 if request.headers.get('X-Forwarded-For'):
@@ -96,7 +98,8 @@ def register_qr_routes(app):
                     "referido_apellido": referido_apellido,
                     "referido_email": referido_email,
                     "referido_telefono": referido_telefono,
-                    "video_token": token
+                    "video_token": token,
+                    "acepto_datos": 1
                 }
                 
                 try:
@@ -139,6 +142,29 @@ def register_qr_routes(app):
                 label {{ display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: #334155; }}
                 input {{ width: 100%; padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 10px; font-size: 1rem; background-color: #F8FAFC; outline: none; }}
                 .btn-submit {{ width: 100%; background: #007BFF; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }}
+                .consentimiento {{
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 10px;
+                    margin-bottom: 20px;
+                    line-height: 1.5;
+                    cursor: pointer;
+                }}
+
+                .consentimiento input[type="checkbox"] {{
+                    width: 18px;
+                    height: 18px;
+                    flex-shrink: 0;
+                    margin-top: 2px;
+                    padding: 0;
+                    accent-color: #007BFF;
+                }}
+
+                .form-error {{
+                    color: #B91C1C;
+                    font-size: 0.85rem;
+                    margin-bottom: 16px;
+                }}
             </style>
         </head>
         <body>
@@ -146,11 +172,22 @@ def register_qr_routes(app):
                 <h1>Bienvenido</h1>
                 <p class="subtitulo">Completa tus datos para continuar</p>
                 <div class="referido-por">Has sido invitado por: <strong>{nombre_colaborador}</strong></div>
+                {f'<p role="alert" class="form-error">{mensaje}</p>' if mensaje else ''}
                 <form method="POST">
                     <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" required></div>
                     <div class="form-group"><label>Apellido(s)</label><input type="text" name="apellido" required></div>
                     <div class="form-group"><label>Correo Electronico</label><input type="email" name="email" required></div>
                     <div class="form-group"><label>Telefono</label><input type="tel" name="telefono" required></div>
+                    <label class="consentimiento" for="acepto_datos">
+                        <input
+                            type="checkbox"
+                            id="acepto_datos"
+                            name="acepto_datos"
+                            value="1"
+                            required
+                        >
+                        <span>Acepto la política de protección de datos</span>
+                    </label>
                     <button type="submit" class="btn-submit">Enviar mis datos</button>
                 </form>
             </div>

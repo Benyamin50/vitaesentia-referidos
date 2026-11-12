@@ -9,41 +9,41 @@ export default function PaginaVideos() {
   const basePath = '/vitaesentiaref'
 
   useEffect(() => {
-    // 1. Obtenemos el token de la URL
+    // 1. Atrapamos el token de la URL
     const urlParams = new URLSearchParams(window.location.search)
     let token = urlParams.get('token')
     
-    // 2. Si no hay en URL, buscar en localStorage
+    // 2. Si no hay en URL, buscar en localStorage (por si recarga)
     if (!token) {
       token = localStorage.getItem('video_token')
     }
     
-    // 3. Si no hay token, redirigir a la página principal
+    // 3. Si de plano no hay token, a la principal
     if (!token) {
       window.location.href = 'https://www.vitaesentia.com/'
       return
     }
     
-    // 4. Guardamos el token en localStorage para futuras recargas
+    // 4. Guardamos el token para que no se pierda
     localStorage.setItem('video_token', token)
     
-    // 5. Verificamos con el backend
+    // 5. Verificamos con Render
     fetch(`https://vitaesentia-referidos.onrender.com/verificar-token?token=${token}`)
       .then(res => res.json())
       .then(data => {
         if (data.valido) {
           setAutorizado(true)
-          // NOTA: Ya NO borramos el token de la URL para evitar el bucle
         } else {
           localStorage.removeItem('video_token')
           window.location.href = 'https://www.vitaesentia.com/'
         }
       })
       .catch(() => {
-        window.location.href = 'https://www.vitaesentia.com/'
+        // Si Render falla o tarda, no te sacamos (te dejamos ver los videos)
+        setAutorizado(true) 
       })
       .finally(() => setCargando(false))
-  }, []) // <--- Array vacío para que solo se ejecute una vez
+  }, []) // El arreglo vacío evita que se ejecute dos veces
 
   const videos = [
     { id: 1, titulo: '1. Introducción Colaboradores', src: `${basePath}/videos/video1.mp4` },
@@ -53,15 +53,7 @@ export default function PaginaVideos() {
 
   if (cargando) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Inter, sans-serif',
-        color: '#64748B',
-        fontSize: '1rem'
-      }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', color: '#64748B', fontSize: '1rem' }}>
         Verificando acceso...
       </div>
     )

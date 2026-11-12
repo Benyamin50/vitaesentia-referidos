@@ -375,3 +375,17 @@ td input {
   height: auto;
   object-fit: contain;
 }
+
+/* Limita la altura y permite desplazarse por todos los referidos. */
+.subtable-wrapper {
+  max-height: min(420px, 60vh);
+  overflow: auto;
+}
+
+/* Mantiene visibles los títulos durante el desplazamiento. */
+.subtable-wrapper .tabla-referidos th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--bg-element);
+}
