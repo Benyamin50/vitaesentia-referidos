@@ -9,7 +9,7 @@ export default function PaginaVideos() {
   const basePath = '/vitaesentiaref'
 
   useEffect(() => {
-    // 1. PRIORIDAD: token de la URL
+    // 1. Obtenemos el token de la URL
     const urlParams = new URLSearchParams(window.location.search)
     let token = urlParams.get('token')
     
@@ -24,28 +24,26 @@ export default function PaginaVideos() {
       return
     }
     
-    // 4. Guardar token en localStorage y verificar con backend
+    // 4. Guardamos el token en localStorage para futuras recargas
     localStorage.setItem('video_token', token)
     
+    // 5. Verificamos con el backend
     fetch(`https://vitaesentia-referidos.onrender.com/verificar-token?token=${token}`)
       .then(res => res.json())
       .then(data => {
         if (data.valido) {
           setAutorizado(true)
-          // Limpiar token de la URL
-          window.history.replaceState({}, '', `${basePath}/videos-referidos`)
+          // NOTA: Ya NO borramos el token de la URL para evitar el bucle
         } else {
           localStorage.removeItem('video_token')
-          // Token inválido → página principal
           window.location.href = 'https://www.vitaesentia.com/'
         }
       })
       .catch(() => {
-        // Error de conexión → página principal
         window.location.href = 'https://www.vitaesentia.com/'
       })
       .finally(() => setCargando(false))
-  }, [basePath])
+  }, []) // <--- Array vacío para que solo se ejecute una vez
 
   const videos = [
     { id: 1, titulo: '1. Introducción Colaboradores', src: `${basePath}/videos/video1.mp4` },
