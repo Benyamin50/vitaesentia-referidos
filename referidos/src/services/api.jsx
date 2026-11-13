@@ -31,7 +31,11 @@ const handleResponse = async (response) => {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error || `Error ${response.status}: ${response.statusText}`);
   }
-  return response.json();
+  const data = await response.json();
+  if (data?.success === false || data?.error) {
+    throw new Error(data.error || 'No se pudo completar la operación.');
+  }
+  return data;
 };
 
 export const api = {
@@ -39,7 +43,9 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/colaboradores`, {
       headers: getAuthHeaders()
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+    if (!Array.isArray(data)) throw new Error('Lista de colaboradores inválida.');
+    return data;
   },
 
   async crearColaborador(data) {
@@ -48,19 +54,37 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify(data)
     });
-    return handleResponse(response);
+    const resultado = await handleResponse(response);
+    const colaborador = resultado.colaborador || resultado.data || resultado;
+    const codigo = colaborador.codigo_unico || colaborador.codigo;
+    if (colaborador.id == null || !codigo) {
+      throw new Error('La respuesta no contiene el ID y código del colaborador. Usa Actualizar datos para comprobar su creación.');
+    }
+    return { ...colaborador, codigo_unico: codigo };
   },
 
   async getReferidos(colaboradorId) {
-    const response = await fetch(`${API_BASE_URL}/colaboradores/${colaboradorId}/referidos`, {
+    const response = await fetch(`${API_BASE_URL}/colaboradores/${encodeURIComponent(colaboradorId)}/referidos`, {
       headers: getAuthHeaders()
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+    if (!Array.isArray(data)) throw new Error('Lista de referidos inválida.');
+    return data;
   },
 
   async registrarReferido(ref) {
     const response = await fetch(`${API_BASE_URL}/landing-data?ref=${ref}`);
     return handleResponse(response);
+  },
+
+  async getReferidosPorId(colaboradorId) {
+    const response = await fetch(
+      `${API_BASE_URL}/colaboradores/id/${encodeURIComponent(colaboradorId)}/referidos`,
+      { headers: getAuthHeaders() }
+    );
+    const data = await handleResponse(response);
+    if (!Array.isArray(data)) throw new Error('Lista de referidos inválida.');
+    return data;
   },
 
   async editarColaborador(id, data) {
