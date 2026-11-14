@@ -1,3 +1,5 @@
+import { borrarCachesReferidos } from './referidosCache.js';
+
 // ✅ API de Referidos en Render
 const API_BASE_URL = 'https://vitaesentia-referidos.onrender.com';
 
@@ -17,6 +19,7 @@ const getAuthHeaders = () => {
 // Función auxiliar para manejar errores
 const handleResponse = async (response, { redirectOn401 = true } = {}) => {
   if (response.status === 401 && redirectOn401) {
+    borrarCachesReferidos(localStorage);
     localStorage.removeItem('admin_token');
     localStorage.removeItem('colaborador_codigo');
     localStorage.removeItem('colaborador_nombre');
@@ -107,10 +110,12 @@ export const api = {
     return { ...colaborador, codigo_unico: codigo };
   },
 
-  async getReferidos(colaboradorId) {
-    const response = await fetch(`${API_BASE_URL}/colaboradores/${encodeURIComponent(colaboradorId)}/referidos`, {
-      headers: getAuthHeaders()
+  async getReferidos(colaboradorId, ultimoId = 0) {
+    const response = await fetch(`${API_BASE_URL}/colaboradores/${encodeURIComponent(colaboradorId)}/referidos?ultimo_id=${encodeURIComponent(ultimoId)}`, {
+      headers: getAuthHeaders(),
+      cache: 'no-store'
     });
+    if (response.status === 204) return [];
     const data = await handleResponse(response);
     if (!Array.isArray(data)) throw new Error('Lista de referidos inválida.');
     return data;
@@ -120,11 +125,12 @@ export const api = {
     return `${API_BASE_URL}/qr?ref=${encodeURIComponent(ref)}`;
   },
 
-  async getReferidosPorId(colaboradorId) {
+  async getReferidosPorId(colaboradorId, ultimoId = 0) {
     const response = await fetch(
-      `${API_BASE_URL}/colaboradores/id/${encodeURIComponent(colaboradorId)}/referidos`,
-      { headers: getAuthHeaders() }
+      `${API_BASE_URL}/colaboradores/id/${encodeURIComponent(colaboradorId)}/referidos?ultimo_id=${encodeURIComponent(ultimoId)}`,
+      { headers: getAuthHeaders(), cache: 'no-store' }
     );
+    if (response.status === 204) return [];
     const data = await handleResponse(response);
     if (!Array.isArray(data)) throw new Error('Lista de referidos inválida.');
     return data;

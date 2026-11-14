@@ -3,7 +3,7 @@ import os
 
 APPS_SCRIPT_URL = os.environ.get(
     'APPS_SCRIPT_URL', 
-    'https://script.google.com/macros/s/AKfycbw9t8DfQQdN9U2MNVILhkVTJZBJqL59seJ8OYf37cWFzyM453a3YkPyhHE3aeDh58t8/exec'
+    'https://script.google.com/macros/s/AKfycbzB1wwdhov8u1wJjv-OnfR-xKBQW_p6SQlhUSdYqVVxhUNy4iTujfAxQupvzBgfNSBWyg/exec'
 )
 
 def get_colaboradores():
@@ -18,12 +18,13 @@ def crear_colaborador(nombre, email):
     }, timeout=10)
     return res.json()
 
-def get_referidos(colab_id):
+def get_referidos(colab_id, ultimo_id=0):
     res = requests.get(
         APPS_SCRIPT_URL, 
-        params={'action': 'getReferidos', 'colaborador_id': colab_id},
+        params={'action': 'getReferidos', 'colaborador_id': colab_id, 'ultimo_id': ultimo_id},
         timeout=10
     )
+    res.raise_for_status()
     return res.json()
 
 def verificar_colaborador(codigo):

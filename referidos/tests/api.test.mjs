@@ -3,8 +3,9 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
 // El servicio solo usa JavaScript; lo cargamos sin configurar un compilador JSX.
-const source = await readFile(new URL('../src/services/api.jsx', import.meta.url))
-const { api } = await import(`data:text/javascript;base64,${source.toString('base64')}`)
+const source = (await readFile(new URL('../src/services/api.jsx', import.meta.url), 'utf8'))
+  .replace('./referidosCache.js', new URL('../src/services/referidosCache.js', import.meta.url).href)
+const { api } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
 let calls
 
 beforeEach(() => {
@@ -69,6 +70,38 @@ test('una lista invalida se rechaza antes de reemplazar los datos locales', asyn
   await assert.rejects(api.getColaboradores(), /Lista de colaboradores/)
   await assert.rejects(api.getReferidos('OWN'), /Lista de referidos/)
   await assert.rejects(api.getReferidosPorId(2), /Lista de referidos/)
+})
+
+test('ambas consultas envían el cursor y no usan la caché HTTP', async () => {
+  respond([{ id: 46 }])
+  await api.getReferidos('OWN &', 45)
+  await api.getReferidosPorId(2, 45)
+  await api.getReferidos('OWN')
+  assert.ok(calls[0][0].endsWith('/colaboradores/OWN%20%26/referidos?ultimo_id=45'))
+  assert.ok(calls[1][0].endsWith('/colaboradores/id/2/referidos?ultimo_id=45'))
+  assert.ok(calls[2][0].endsWith('?ultimo_id=0'))
+  assert.ok(calls.every(([, options]) => options.cache === 'no-store'))
+})
+
+test('204 conserva los datos existentes sin intentar leer JSON', async () => {
+  globalThis.fetch = async () => ({ status: 204, json() { throw new Error('No debe leerse') } })
+  assert.deepEqual(await api.getReferidos('OWN', 45), [])
+  assert.deepEqual(await api.getReferidosPorId(2, 45), [])
+})
+
+test('un 401 elimina las cachés de referidos y las credenciales', async () => {
+  const datos = new Map([['referidos_user_1_admin', '{}'], ['referidos_user_2_colaborador', '{}'], ['admin_token', 'authenticated']])
+  globalThis.localStorage = {
+    get length() { return datos.size },
+    key: index => [...datos.keys()][index],
+    getItem: key => datos.get(key),
+    removeItem: key => datos.delete(key),
+  }
+  globalThis.window = { location: { href: '' } }
+  respond({}, 401)
+  await assert.rejects(api.getReferidos('OWN', 45), /Sesión expirada/)
+  assert.equal(datos.size, 0)
+  assert.ok(window.location.href.endsWith('/login'))
 })
 
 test('un referido consulta videos con su token sin enviar la sesión del administrador', async () => {

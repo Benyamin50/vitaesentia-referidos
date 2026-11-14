@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
+import {
+  claveCacheReferidos,
+  leerCacheReferidos,
+  guardarCacheReferidos,
+  mezclarReferidos,
+  idReferido,
+} from '../../services/referidosCache'
 import html2pdf from 'html2pdf.js'
 import logoVitaesentia from '../../assets/vitaesentia-logo.png'
 import GestionVideos from '../GestionVideos/GestionVideos'
@@ -46,11 +53,28 @@ function DashboardIcon({ name, size = 20 }) {
 export default function TablaColaboradores() {
   const navigate = useNavigate()
 
+  const colaboradorNombre =
+    localStorage.getItem('colaborador_nombre') || 'Colaborador'
+  const colaboradorCodigo = localStorage.getItem('colaborador_codigo') || ''
+  const colaboradorRol =
+    localStorage.getItem('colaborador_rol') || 'colaborador'
+  const usuarioId = localStorage.getItem('colaborador_id')
+  const usuarioCache =
+    usuarioId && !['undefined', 'null'].includes(usuarioId)
+      ? usuarioId
+      : colaboradorCodigo
+  const claveCache = claveCacheReferidos(usuarioCache, colaboradorRol)
+  const cacheInicialRef = useRef(null)
+  if (!cacheInicialRef.current)
+    cacheInicialRef.current = leerCacheReferidos(localStorage, claveCache)
+
   const [colaboradores, setColaboradores] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showReferidos, setShowReferidos] = useState(null)
-  const [referidos, setReferidos] = useState({})
+  const [referidos, setReferidosState] = useState(
+    cacheInicialRef.current.referidos,
+  )
   const [guardandoReferidos, setGuardandoReferidos] = useState({})
   const [cargandoReferidos, setCargandoReferidos] = useState({})
   const [erroresReferidos, setErroresReferidos] = useState({})
@@ -71,16 +95,31 @@ export default function TablaColaboradores() {
   const crearDialogRef = useRef(null)
   const operacionesRef = useRef(new Set())
   const actualizandoRef = useRef(false)
-  const referidosConfirmadosRef = useRef(new Map())
+  const referidosConfirmadosRef = useRef(null)
+  if (!referidosConfirmadosRef.current) {
+    referidosConfirmadosRef.current = new Map(
+      Object.values(cacheInicialRef.current.referidos).flatMap((lista) =>
+        lista.map((ref) => [
+          String(ref.id),
+          { estado: ref.estado || '', observaciones: ref.observaciones || '' },
+        ]),
+      ),
+    )
+  }
   const cambiosPendientesRef = useRef(new Map())
   const versionesReferidosRef = useRef(new Map())
   const cargaInicialRef = useRef(null)
+  const referidosRef = useRef(cacheInicialRef.current.referidos)
+  const ultimoIdsRef = useRef(cacheInicialRef.current.ultimoIds)
+  const solicitudesReferidosRef = useRef(new Map())
+  const gruposEliminadosRef = useRef(new Set())
+  const sesionCacheRef = useRef({
+    codigo: colaboradorCodigo,
+    rol: colaboradorRol,
+    clave: claveCache,
+    cerrada: false,
+  })
 
-  const colaboradorNombre =
-    localStorage.getItem('colaborador_nombre') || 'Colaborador'
-  const colaboradorCodigo = localStorage.getItem('colaborador_codigo') || ''
-  const colaboradorRol =
-    localStorage.getItem('colaborador_rol') || 'colaborador'
   const esAdmin = colaboradorRol === 'admin'
   const totalReferidos = colaboradores.reduce((total, colab) => {
     const cantidad = Number(colab.total_referidos)
@@ -115,7 +154,7 @@ export default function TablaColaboradores() {
   const cambiarSeccion = (seccion) => {
     if (seccion === 'mis-referidos') {
       setShowReferidos(colaboradorCodigo)
-      if (!referidos[colaboradorCodigo]) cargarReferidos(colaboradorCodigo)
+      cargarReferidos(colaboradorCodigo)
     }
     setSeccionActiva(seccion)
     setMenuAbierto(false)
@@ -147,6 +186,7 @@ export default function TablaColaboradores() {
   }, [menuAbierto])
 
   const handleLogout = () => {
+    sesionCacheRef.current.cerrada = true
     localStorage.clear()
     navigate('/login')
   }
@@ -179,15 +219,85 @@ export default function TablaColaboradores() {
     setOperacionesPendientes(operacionesRef.current.size)
   }
 
-  const leerReferidos = (codigo) =>
+  const leerReferidos = (
+    codigo,
+    ultimoId = ultimoIdsRef.current[codigo] || 0,
+  ) =>
     codigo.startsWith('id:')
-      ? api.getReferidosPorId(codigo.slice(3))
-      : api.getReferidos(codigo)
+      ? api.getReferidosPorId(codigo.slice(3), ultimoId)
+      : api.getReferidos(codigo, ultimoId)
 
   const datosGestion = (ref) => ({
     estado: ref.estado || '',
     observaciones: ref.observaciones || '',
   })
+
+  const sesionCacheVigente = () =>
+    !sesionCacheRef.current.cerrada &&
+    localStorage.getItem('admin_token') === 'authenticated' &&
+    localStorage.getItem('colaborador_codigo') ===
+      sesionCacheRef.current.codigo &&
+    (localStorage.getItem('colaborador_rol') || 'colaborador') ===
+      sesionCacheRef.current.rol
+
+  const persistirReferidos = () => {
+    if (!sesionCacheVigente()) return
+    const confirmados = Object.fromEntries(
+      Object.entries(referidosRef.current).map(([codigo, lista]) => [
+        codigo,
+        lista.map((ref) => ({
+          ...ref,
+          ...(cambiosPendientesRef.current.get(String(ref.id)) ||
+            referidosConfirmadosRef.current.get(String(ref.id))),
+        })),
+      ]),
+    )
+    guardarCacheReferidos(
+      localStorage,
+      sesionCacheRef.current.clave,
+      confirmados,
+      ultimoIdsRef.current,
+    )
+  }
+
+  const actualizarReferidos = (cambio, { persistir = true } = {}) => {
+    if (!sesionCacheVigente()) return
+    const siguiente =
+      typeof cambio === 'function' ? cambio(referidosRef.current) : cambio
+    referidosRef.current = siguiente
+    setReferidosState(siguiente)
+    if (persistir) persistirReferidos()
+  }
+
+  const integrarReferidos = (codigo, recibidos, versionesAlSolicitar) => {
+    if (!sesionCacheVigente() || gruposEliminadosRef.current.has(codigo)) return
+    // Validar toda la respuesta antes de avanzar el cursor o tocar la caché.
+    const ids = recibidos.map((ref) => idReferido(ref.id))
+    const anteriores = referidosRef.current[codigo] || []
+    const existentes = new Set(anteriores.map((ref) => idReferido(ref.id)))
+    const nuevos = recibidos.map((ref) => {
+      const id = String(idReferido(ref.id))
+      const pendiente = cambiosPendientesRef.current.get(id)
+      const cambioDuranteCarga =
+        versionesAlSolicitar.get(id) !== versionesReferidosRef.current.get(id)
+      if (pendiente || cambioDuranteCarga)
+        return {
+          ...ref,
+          ...(pendiente || referidosConfirmadosRef.current.get(id)),
+        }
+      if (!existentes.has(Number(id)))
+        referidosConfirmadosRef.current.set(id, datosGestion(ref))
+      return ref
+    })
+    const lista = mezclarReferidos(anteriores, nuevos)
+    ultimoIdsRef.current[codigo] = ids.reduce(
+      (mayor, id) => Math.max(mayor, id),
+      ultimoIdsRef.current[codigo] || 0,
+    )
+    if (recibidos.length || !referidosRef.current[codigo]) {
+      actualizarReferidos((prev) => ({ ...prev, [codigo]: lista }))
+    }
+  }
 
   const actualizarDatos = async () => {
     if (
@@ -201,6 +311,7 @@ export default function TablaColaboradores() {
     actualizandoRef.current = true
     setActualizandoDatos(true)
     try {
+      const versionesAlSolicitar = new Map(versionesReferidosRef.current)
       const nuevosColaboradores = await api.getColaboradores()
       const clavesValidas = new Set([
         colaboradorCodigo,
@@ -212,7 +323,7 @@ export default function TablaColaboradores() {
       // Primero comprobamos el directorio por si alguien elimino un colaborador.
       const claves = [
         ...new Set([
-          ...Object.keys(referidos),
+          ...Object.keys(referidosRef.current),
           ...Object.keys(erroresReferidos),
           ...(['detalle', 'mis-referidos'].includes(seccionActiva) &&
           codigoReferidosActivo
@@ -223,18 +334,20 @@ export default function TablaColaboradores() {
       const listasValidas = await Promise.all(
         claves.map(async (codigo) => [codigo, await leerReferidos(codigo)]),
       )
-      for (const [, lista] of listasValidas) {
-        for (const ref of lista) {
-          referidosConfirmadosRef.current.set(String(ref.id), datosGestion(ref))
-        }
-      }
+      if (!sesionCacheVigente()) return
       setColaboradores(nuevosColaboradores)
-      setReferidos((prev) => ({
-        ...Object.fromEntries(
+      ultimoIdsRef.current = Object.fromEntries(
+        Object.entries(ultimoIdsRef.current).filter(([codigo]) =>
+          clavesValidas.has(codigo),
+        ),
+      )
+      actualizarReferidos((prev) =>
+        Object.fromEntries(
           Object.entries(prev).filter(([codigo]) => clavesValidas.has(codigo)),
         ),
-        ...Object.fromEntries(listasValidas),
-      }))
+      )
+      for (const [codigo, lista] of listasValidas)
+        integrarReferidos(codigo, lista, versionesAlSolicitar)
       setErroresReferidos((prev) => {
         const errores = { ...prev }
         for (const [codigo] of listasValidas) delete errores[codigo]
@@ -450,15 +563,28 @@ export default function TablaColaboradores() {
       const clave = `colaborador:${id}`
       if (!eliminado || eliminado.pendiente || !iniciarOperacion(clave)) return
       setColaboradores((prev) => prev.filter((colab) => colab.id !== id))
+      const grupos = [eliminado.codigo_unico, `id:${id}`].filter(Boolean)
+      const listasAnteriores = {}
+      const cursoresAnteriores = {}
+      for (const grupo of grupos) {
+        if (referidosRef.current[grupo])
+          listasAnteriores[grupo] = referidosRef.current[grupo]
+        if (grupo in ultimoIdsRef.current)
+          cursoresAnteriores[grupo] = ultimoIdsRef.current[grupo]
+        gruposEliminadosRef.current.add(grupo)
+        delete ultimoIdsRef.current[grupo]
+      }
+      actualizarReferidos((prev) =>
+        Object.fromEntries(
+          Object.entries(prev).filter(([grupo]) => !grupos.includes(grupo)),
+        ),
+      )
       try {
         await api.eliminarColaborador(id)
-        setReferidos((prev) => {
-          const siguiente = { ...prev }
-          delete siguiente[eliminado.codigo_unico]
-          delete siguiente[`id:${id}`]
-          return siguiente
-        })
       } catch (err) {
+        for (const grupo of grupos) gruposEliminadosRef.current.delete(grupo)
+        Object.assign(ultimoIdsRef.current, cursoresAnteriores)
+        actualizarReferidos((prev) => ({ ...prev, ...listasAnteriores }))
         setColaboradores((prev) => {
           if (prev.some((colab) => colab.id === id)) return prev
           const siguiente = [...prev]
@@ -519,19 +645,22 @@ export default function TablaColaboradores() {
 
   const actualizarReferidoLocal = (codigo, id, campo, valor) => {
     setMensajesReferidos((prev) => ({ ...prev, [id]: '' }))
-    setReferidos((prev) => ({
-      ...prev,
-      [codigo]: (prev[codigo] || []).map((ref) =>
-        ref.id === id ? { ...ref, [campo]: valor } : ref,
-      ),
-    }))
+    actualizarReferidos(
+      (prev) => ({
+        ...prev,
+        [codigo]: (prev[codigo] || []).map((ref) =>
+          ref.id === id ? { ...ref, [campo]: valor } : ref,
+        ),
+      }),
+      { persistir: false },
+    )
   }
 
   const puedeGestionarReferido = (referido, codigo) =>
     esAdmin || (referido.colaborador_id || codigo) === colaboradorCodigo
 
   const aplicarCambiosReferido = (id, cambios) => {
-    setReferidos((prev) =>
+    actualizarReferidos((prev) =>
       Object.fromEntries(
         Object.entries(prev).map(([codigo, lista]) => [
           codigo,
@@ -572,6 +701,7 @@ export default function TablaColaboradores() {
       referidosConfirmadosRef.current.set(id, cambios)
       setMensajesReferidos((prev) => ({ ...prev, [id]: 'Cambios guardados' }))
     } catch (err) {
+      cambiosPendientesRef.current.delete(id)
       if (anteriores) aplicarCambiosReferido(id, anteriores)
       setMensajesReferidos((prev) => ({
         ...prev,
@@ -592,40 +722,35 @@ export default function TablaColaboradores() {
     }
   }
 
-  const cargarReferidos = async (codigo) => {
+  const cargarReferidos = (codigo) => {
+    if (solicitudesReferidosRef.current.has(codigo))
+      return solicitudesReferidosRef.current.get(codigo)
+    if (!sesionCacheVigente() || gruposEliminadosRef.current.has(codigo))
+      return Promise.resolve()
     const versionesAlSolicitar = new Map(versionesReferidosRef.current)
-    setCargandoReferidos((prev) => ({ ...prev, [codigo]: true }))
-    setErroresReferidos((prev) => ({ ...prev, [codigo]: '' }))
-    try {
-      const recibidos = await leerReferidos(codigo)
-      const data = recibidos.map((ref) => {
-        const id = String(ref.id)
-        const pendiente = cambiosPendientesRef.current.get(id)
-        const cambioDuranteCarga =
-          versionesAlSolicitar.get(id) !== versionesReferidosRef.current.get(id)
-        if (pendiente || cambioDuranteCarga) {
-          return {
-            ...ref,
-            ...(pendiente || referidosConfirmadosRef.current.get(id)),
-          }
-        }
-        referidosConfirmadosRef.current.set(id, datosGestion(ref))
-        return ref
-      })
-      setReferidos((prev) => ({ ...prev, [codigo]: data }))
-    } catch (err) {
-      setErroresReferidos((prev) => ({ ...prev, [codigo]: err.message }))
-    } finally {
-      setCargandoReferidos((prev) => ({ ...prev, [codigo]: false }))
-    }
+    const solicitud = (async () => {
+      setCargandoReferidos((prev) => ({ ...prev, [codigo]: true }))
+      setErroresReferidos((prev) => ({ ...prev, [codigo]: '' }))
+      try {
+        const recibidos = await leerReferidos(codigo)
+        integrarReferidos(codigo, recibidos, versionesAlSolicitar)
+      } catch (err) {
+        if (sesionCacheVigente())
+          setErroresReferidos((prev) => ({ ...prev, [codigo]: err.message }))
+      } finally {
+        setCargandoReferidos((prev) => ({ ...prev, [codigo]: false }))
+        solicitudesReferidosRef.current.delete(codigo)
+      }
+    })()
+    solicitudesReferidosRef.current.set(codigo, solicitud)
+    return solicitud
   }
 
   const abrirReferidos = (colaborador) => {
     const codigo = colaborador.codigo_unico || `id:${colaborador.id}`
     setShowReferidos(codigo)
     cambiarSeccion(codigo === colaboradorCodigo ? 'mis-referidos' : 'detalle')
-    if (codigo !== colaboradorCodigo && !referidos[codigo])
-      cargarReferidos(codigo)
+    if (codigo !== colaboradorCodigo) cargarReferidos(codigo)
   }
 
   const generarQR = (codigo, nombre) => {
@@ -636,169 +761,183 @@ export default function TablaColaboradores() {
 
   useEffect(() => {
     cargarColaboradores()
+    for (const codigo of Object.keys(referidosRef.current))
+      cargarReferidos(codigo)
   }, [])
 
   const renderListaReferidos = (codigo) => {
     if (!codigo) return null
-    if (erroresReferidos[codigo]) {
+    const aviso = erroresReferidos[codigo] ? (
+      <div className="referidos-error" role="alert">
+        <p>{erroresReferidos[codigo]}</p>
+        <button
+          type="button"
+          className="btn-pdf"
+          onClick={() => cargarReferidos(codigo)}
+        >
+          Reintentar
+        </button>
+      </div>
+    ) : cargandoReferidos[codigo] ? (
+      <p role="status">Buscando nuevos referidos...</p>
+    ) : null
+    if (!referidos[codigo]) {
       return (
-        <div className="referidos-error" role="alert">
-          <p>{erroresReferidos[codigo]}</p>
-          <button
-            type="button"
-            className="btn-pdf"
-            onClick={() => cargarReferidos(codigo)}
-          >
-            Reintentar
-          </button>
-        </div>
-      )
-    }
-    if (cargandoReferidos[codigo] || !referidos[codigo]) {
-      return (
-        <p className="empty-state" role="status">
-          Cargando referidos...
-        </p>
+        aviso || (
+          <p className="empty-state" role="status">
+            Cargando referidos...
+          </p>
+        )
       )
     }
     if (referidos[codigo].length === 0) {
       return (
-        <p className="empty-state">Todavía no hay referidos registrados.</p>
+        <>
+          {aviso}
+          <p className="empty-state">Todavía no hay referidos registrados.</p>
+        </>
       )
     }
     return (
-      <div
-        className="subtable-wrapper"
-        tabIndex={0}
-        aria-label="Lista desplazable de referidos"
-      >
-        {referidos[codigo]?.map((ref) => {
-          const puedeGestionar = puedeGestionarReferido(ref, codigo)
-          return (
-            <article
-              className={`referido-card${puedeGestionar ? '' : ' referido-card-lectura'}`}
-              key={ref.id}
-            >
-              <div className="referido-details">
-                <div className="referido-heading">
-                  <span className="referido-avatar">
-                    <DashboardIcon name="referrals" size={22} />
-                  </span>
-                  <div>
-                    <h4>
-                      {`${ref.referido_nombre || ''} ${ref.referido_apellido || ''}`.trim() ||
-                        'Sin nombre registrado'}
-                    </h4>
-                    <p>Datos de contacto y registro</p>
-                  </div>
-                </div>
-                <dl className="referido-data">
-                  {[
-                    ['Fecha de registro', formatearFecha(ref.fecha_scan)],
-                    ['Correo', ref.referido_email],
-                    ['Teléfono', ref.referido_telefono],
-                    ['Dirección IP', ref.ip_address],
-                    ['País', ref.pais],
-                    ['Ciudad', ref.ciudad],
-                    ['Dispositivo', ref.tipo_dispositivo],
-                    [
-                      'Sistema / navegador',
-                      `${ref.sistema_operativo || '—'} / ${ref.navegador || '—'}`,
-                    ],
-                    ...(!puedeGestionar
-                      ? [
-                          ['Estado', ref.estado || 'Sin estado'],
-                          [
-                            'Observaciones',
-                            ref.observaciones || 'Sin observaciones',
-                          ],
-                        ]
-                      : []),
-                  ].map(([label, value]) => (
-                    <div className="referido-dato" key={label}>
-                      <dt>{label}</dt>
-                      <dd className="selectable-text">
-                        {value || 'No disponible'}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-              {puedeGestionar && (
-                <div className="referido-management">
-                  <h4>
-                    <DashboardIcon name="shield" size={18} />
-                    Gestión del referido
-                  </h4>
-                  <p>Actualiza su estado y registra tus observaciones.</p>
-                  <label htmlFor={`estado-${ref.id}`}>Estado</label>
-                  <select
-                    id={`estado-${ref.id}`}
-                    className="referido-estado"
-                    value={ref.estado || ''}
-                    disabled={!!guardandoReferidos[ref.id] || actualizandoDatos}
-                    onChange={(e) =>
-                      actualizarReferidoLocal(
-                        codigo,
-                        ref.id,
-                        'estado',
-                        e.target.value,
-                      )
-                    }
-                  >
-                    <option value="">Sin estado</option>
-                    <option value="Agendado">Agendado</option>
-                    <option value="Cocinado">Cocinado</option>
-                    <option value="Vendido">Vendido</option>
-                    <option value="Contactado">Contactado</option>
-                  </select>
-                  <label htmlFor={`observaciones-${ref.id}`}>
-                    Observaciones
-                  </label>
-                  <textarea
-                    id={`observaciones-${ref.id}`}
-                    className="referido-observaciones"
-                    placeholder="Escribe notas sobre el seguimiento..."
-                    rows={4}
-                    maxLength={5000}
-                    value={ref.observaciones || ''}
-                    disabled={!!guardandoReferidos[ref.id] || actualizandoDatos}
-                    onChange={(e) =>
-                      actualizarReferidoLocal(
-                        codigo,
-                        ref.id,
-                        'observaciones',
-                        e.target.value,
-                      )
-                    }
-                  />
-                  <div className="referido-save-row">
-                    <span role="status">
-                      {guardandoReferidos[ref.id]
-                        ? 'Guardando cambios...'
-                        : mensajesReferidos[ref.id] ||
-                          'Los cambios se aplican al guardar.'}
+      <>
+        {aviso}
+        <div
+          className="subtable-wrapper"
+          tabIndex={0}
+          aria-label="Lista desplazable de referidos"
+        >
+          {referidos[codigo]?.map((ref) => {
+            const puedeGestionar = puedeGestionarReferido(ref, codigo)
+            return (
+              <article
+                className={`referido-card${puedeGestionar ? '' : ' referido-card-lectura'}`}
+                key={ref.id}
+              >
+                <div className="referido-details">
+                  <div className="referido-heading">
+                    <span className="referido-avatar">
+                      <DashboardIcon name="referrals" size={22} />
                     </span>
-                    <button
-                      type="button"
-                      className="btn-guardar"
+                    <div>
+                      <h4>
+                        {`${ref.referido_nombre || ''} ${ref.referido_apellido || ''}`.trim() ||
+                          'Sin nombre registrado'}
+                      </h4>
+                      <p>Datos de contacto y registro</p>
+                    </div>
+                  </div>
+                  <dl className="referido-data">
+                    {[
+                      ['Fecha de registro', formatearFecha(ref.fecha_scan)],
+                      ['Correo', ref.referido_email],
+                      ['Teléfono', ref.referido_telefono],
+                      ['Dirección IP', ref.ip_address],
+                      ['País', ref.pais],
+                      ['Ciudad', ref.ciudad],
+                      ['Dispositivo', ref.tipo_dispositivo],
+                      [
+                        'Sistema / navegador',
+                        `${ref.sistema_operativo || '—'} / ${ref.navegador || '—'}`,
+                      ],
+                      ...(!puedeGestionar
+                        ? [
+                            ['Estado', ref.estado || 'Sin estado'],
+                            [
+                              'Observaciones',
+                              ref.observaciones || 'Sin observaciones',
+                            ],
+                          ]
+                        : []),
+                    ].map(([label, value]) => (
+                      <div className="referido-dato" key={label}>
+                        <dt>{label}</dt>
+                        <dd className="selectable-text">
+                          {value || 'No disponible'}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+                {puedeGestionar && (
+                  <div className="referido-management">
+                    <h4>
+                      <DashboardIcon name="shield" size={18} />
+                      Gestión del referido
+                    </h4>
+                    <p>Actualiza su estado y registra tus observaciones.</p>
+                    <label htmlFor={`estado-${ref.id}`}>Estado</label>
+                    <select
+                      id={`estado-${ref.id}`}
+                      className="referido-estado"
+                      value={ref.estado || ''}
                       disabled={
                         !!guardandoReferidos[ref.id] || actualizandoDatos
                       }
-                      onClick={() => guardarReferido(ref, codigo)}
+                      onChange={(e) =>
+                        actualizarReferidoLocal(
+                          codigo,
+                          ref.id,
+                          'estado',
+                          e.target.value,
+                        )
+                      }
                     >
-                      <DashboardIcon name="save" size={16} />
-                      {guardandoReferidos[ref.id]
-                        ? 'Guardando...'
-                        : 'Guardar cambios'}
-                    </button>
+                      <option value="">Sin estado</option>
+                      <option value="Agendado">Agendado</option>
+                      <option value="Cocinado">Cocinado</option>
+                      <option value="Vendido">Vendido</option>
+                      <option value="Contactado">Contactado</option>
+                    </select>
+                    <label htmlFor={`observaciones-${ref.id}`}>
+                      Observaciones
+                    </label>
+                    <textarea
+                      id={`observaciones-${ref.id}`}
+                      className="referido-observaciones"
+                      placeholder="Escribe notas sobre el seguimiento..."
+                      rows={4}
+                      maxLength={5000}
+                      value={ref.observaciones || ''}
+                      disabled={
+                        !!guardandoReferidos[ref.id] || actualizandoDatos
+                      }
+                      onChange={(e) =>
+                        actualizarReferidoLocal(
+                          codigo,
+                          ref.id,
+                          'observaciones',
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <div className="referido-save-row">
+                      <span role="status">
+                        {guardandoReferidos[ref.id]
+                          ? 'Guardando cambios...'
+                          : mensajesReferidos[ref.id] ||
+                            'Los cambios se aplican al guardar.'}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-guardar"
+                        disabled={
+                          !!guardandoReferidos[ref.id] || actualizandoDatos
+                        }
+                        onClick={() => guardarReferido(ref, codigo)}
+                      >
+                        <DashboardIcon name="save" size={16} />
+                        {guardandoReferidos[ref.id]
+                          ? 'Guardando...'
+                          : 'Guardar cambios'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </article>
-          )
-        })}
-      </div>
+                )}
+              </article>
+            )
+          })}
+        </div>
+      </>
     )
   }
 

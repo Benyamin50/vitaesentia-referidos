@@ -4,11 +4,30 @@ from sheets_api import get_colaboradores, get_referidos
 from routes.colaboradores import require_auth
 from referidos_utils import ordenar_referidos
 
+
+def _ultimo_id():
+    valor = request.args.get('ultimo_id', '0')
+    if not valor.isascii() or not valor.isdigit() or len(valor) > 16 or int(valor) > 9007199254740991:
+        raise ValueError('ultimo_id debe ser un entero entre 0 y 9007199254740991')
+    return int(valor)
+
+
+def _respuesta_referidos(refs):
+    if not refs:
+        return '', 204, {'Cache-Control': 'private, no-store'}
+    response = jsonify(ordenar_referidos(refs))
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
+
 def register_referidos_routes(app):
 
     @app.route('/colaboradores/id/<string:colaborador_id>/referidos', methods=['GET'])
     @require_auth
     def get_referidos_por_id_route(colaborador_id):
+        try:
+            ultimo_id = _ultimo_id()
+        except ValueError as error:
+            return jsonify({'error': str(error)}), 400
         # El ID permite consultar la ficha sin revelar el codigo de acceso del propietario.
         try:
             colaboradores = get_colaboradores()
@@ -25,7 +44,7 @@ def register_referidos_routes(app):
             codigo = propietario.get('codigo_unico')
             if not codigo:
                 raise ValueError('Colaborador sin codigo')
-            refs = get_referidos(codigo)
+            refs = get_referidos(codigo, ultimo_id=ultimo_id)
             if not isinstance(refs, list) or not all(isinstance(ref, dict) for ref in refs):
                 raise ValueError('Lista de referidos invalida')
         except (RequestException, ValueError):
@@ -39,9 +58,9 @@ def register_referidos_routes(app):
             'referido_apellido', 'referido_email', 'referido_telefono',
             'formulario_completado', 'acepto_datos', 'estado', 'observaciones',
         }
-        return jsonify([
+        return _respuesta_referidos([
             {campo: valor for campo, valor in ref.items() if campo in campos_publicos}
-            for ref in ordenar_referidos(refs)
+            for ref in refs
         ])
     
     @app.route('/colaboradores/<string:colab_id>/referidos', methods=['GET'])
@@ -50,13 +69,17 @@ def register_referidos_routes(app):
         if g.colaborador.get('rol') != 'admin' and colab_id != g.colaborador_codigo:
             return jsonify({"error": "Solo puedes consultar tus propios referidos"}), 403
         try:
-            refs = get_referidos(colab_id)
+            ultimo_id = _ultimo_id()
+        except ValueError as error:
+            return jsonify({'error': str(error)}), 400
+        try:
+            refs = get_referidos(colab_id, ultimo_id=ultimo_id)
             if not isinstance(refs, list) or not all(isinstance(ref, dict) for ref in refs):
                 raise ValueError('Lista de referidos inválida')
         except (RequestException, ValueError):
             app.logger.exception('Error consultando referidos')
             return jsonify({"error": "No se pudieron consultar los referidos"}), 502
-        return jsonify(ordenar_referidos(refs))
+        return _respuesta_referidos(refs)
 
     @app.route('/landing-data', methods=['GET'])
     def landing_data():

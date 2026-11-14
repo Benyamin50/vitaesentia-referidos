@@ -104,7 +104,7 @@ class PermisosReferidosTests(unittest.TestCase):
 
     def test_owner_reads_own_referrals(self):
         self.assertEqual(self.request('GET', '/colaboradores/OWN/referidos').status_code, 200)
-        self.read_refs.assert_called_once_with('OWN')
+        self.read_refs.assert_called_once_with('OWN', ultimo_id=0)
 
     def test_both_referral_endpoints_return_newest_first_with_invalid_dates_last(self):
         self.read_refs.return_value = [
@@ -131,7 +131,7 @@ class PermisosReferidosTests(unittest.TestCase):
                 result = self.request('GET', '/colaboradores/id/2/referidos', code=code)
                 self.assertEqual(result.status_code, 200)
                 self.assertEqual(result.json, [{'id': 100}])
-                self.read_refs.assert_called_with('OTHER')
+                self.read_refs.assert_called_with('OTHER', ultimo_id=0)
 
     def test_read_only_referrals_preserve_notes_without_exposing_credentials(self):
         self.read_refs.return_value = [{
@@ -168,7 +168,39 @@ class PermisosReferidosTests(unittest.TestCase):
 
     def test_admin_can_read_any_referrals(self):
         self.assertEqual(self.request('GET', '/colaboradores/OTHER/referidos', code='ADMIN').status_code, 200)
-        self.read_refs.assert_called_once_with('OTHER')
+        self.read_refs.assert_called_once_with('OTHER', ultimo_id=0)
+
+    def test_both_routes_forward_incremental_cursor_without_changing_permissions(self):
+        for url, code in [('/colaboradores/OWN/referidos', 'OWN'),
+                          ('/colaboradores/id/2/referidos', 'OTHER')]:
+            with self.subTest(url=url):
+                result = self.request('GET', url + '?ultimo_id=45')
+                self.assertEqual(result.status_code, 200)
+                self.read_refs.assert_called_with(code, ultimo_id=45)
+                self.assertEqual(result.headers['Cache-Control'], 'private, no-store')
+
+    def test_empty_increment_is_204_without_a_json_body(self):
+        self.read_refs.return_value = []
+        for url in ['/colaboradores/OWN/referidos', '/colaboradores/id/2/referidos']:
+            with self.subTest(url=url):
+                result = self.request('GET', url + '?ultimo_id=45')
+                self.assertEqual(result.status_code, 204)
+                self.assertEqual(result.data, b'')
+                self.assertEqual(result.headers['Cache-Control'], 'private, no-store')
+
+    def test_invalid_cursors_never_reach_sheets(self):
+        for url in ['/colaboradores/OWN/referidos', '/colaboradores/id/2/referidos']:
+            for value in ['', '-1', '1.5', 'abc', 'NaN', '9007199254740992', '1' * 100, '٤٥']:
+                with self.subTest(url=url, value=value):
+                    result = self.request('GET', url + '?ultimo_id=' + value)
+                    self.assertEqual(result.status_code, 400)
+        self.read_refs.assert_not_called()
+
+    def test_zero_cursor_and_sheets_errors_do_not_look_like_no_content(self):
+        self.read_refs.side_effect = Timeout('Unavailable')
+        result = self.request('GET', '/colaboradores/OWN/referidos?ultimo_id=0')
+        self.assertEqual(result.status_code, 502)
+        self.read_refs.assert_called_once_with('OWN', ultimo_id=0)
 
     def test_owner_can_edit_own_referral(self):
         result = self.request('PUT', '/referidos/100', data=self.payload)
