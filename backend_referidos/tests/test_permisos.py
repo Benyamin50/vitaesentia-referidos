@@ -106,6 +106,21 @@ class PermisosReferidosTests(unittest.TestCase):
         self.assertEqual(self.request('GET', '/colaboradores/OWN/referidos').status_code, 200)
         self.read_refs.assert_called_once_with('OWN')
 
+    def test_both_referral_endpoints_return_newest_first_with_invalid_dates_last(self):
+        self.read_refs.return_value = [
+            {'id': 1, 'fecha_scan': '2026-01-01T00:00:00Z'},
+            {'id': 2, 'fecha_scan': 'invalid'},
+            {'id': 3, 'fecha_scan': '14/11/2026 10:00:00'},
+            {'id': 4, 'fecha_scan': '2026-11-14T12:00:00-04:00'},
+            {'id': 5},
+        ]
+        for url in ['/colaboradores/OWN/referidos', '/colaboradores/id/1/referidos']:
+            with self.subTest(url=url):
+                result = self.request('GET', url)
+                self.assertEqual(result.status_code, 200)
+                self.assertEqual([ref['id'] for ref in result.json], [4, 3, 1, 2, 5])
+        self.assertEqual(self.read_refs.return_value[0]['id'], 1)
+
     def test_foreign_credential_route_remains_restricted(self):
         self.assertEqual(self.request('GET', '/colaboradores/OTHER/referidos').status_code, 403)
         self.read_refs.assert_not_called()

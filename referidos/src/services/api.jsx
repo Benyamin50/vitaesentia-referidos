@@ -116,9 +116,8 @@ export const api = {
     return data;
   },
 
-  async registrarReferido(ref) {
-    const response = await fetch(`${API_BASE_URL}/landing-data?ref=${ref}`);
-    return handleResponse(response);
+  getFormularioReferidoUrl(ref) {
+    return `${API_BASE_URL}/qr?ref=${encodeURIComponent(ref)}`;
   },
 
   async getReferidosPorId(colaboradorId) {

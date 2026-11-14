@@ -3,7 +3,7 @@ import os
 
 APPS_SCRIPT_URL = os.environ.get(
     'APPS_SCRIPT_URL', 
-    'https://script.google.com/macros/s/AKfycbyByGuAkcS5S6rTKXO9BNIJnFMz1e8e2Mfj-I9hdl9VroUgRC5AduX8a3U3mN8QTSWsIg/exec'
+    'https://script.google.com/macros/s/AKfycbw9t8DfQQdN9U2MNVILhkVTJZBJqL59seJ8OYf37cWFzyM453a3YkPyhHE3aeDh58t8/exec'
 )
 
 def get_colaboradores():
@@ -35,11 +35,17 @@ def verificar_colaborador(codigo):
     return res.json()
 
 def registrar_referido(data):
+    if not data.get('submission_id'):
+        raise ValueError('Falta el identificador del envío')
     res = requests.post(APPS_SCRIPT_URL, json={
-        'action': 'registrarReferido',
-        **data
+        **data,
+        'action': 'registrarReferido'
     }, timeout=10)
-    return res.json()
+    res.raise_for_status()
+    resultado = res.json()
+    if not isinstance(resultado, dict) or resultado.get('success') is not True or resultado.get('error'):
+        raise ValueError('Apps Script no confirmó el guardado del referido')
+    return resultado
 
 def editar_referido(referido_id, estado, observaciones):
     secreto = os.environ.get('APPS_SCRIPT_EDIT_SECRET')

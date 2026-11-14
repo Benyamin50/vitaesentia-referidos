@@ -2,6 +2,7 @@ from flask import jsonify, request, g
 from requests import RequestException
 from sheets_api import get_colaboradores, get_referidos
 from routes.colaboradores import require_auth
+from referidos_utils import ordenar_referidos
 
 def register_referidos_routes(app):
 
@@ -40,7 +41,7 @@ def register_referidos_routes(app):
         }
         return jsonify([
             {campo: valor for campo, valor in ref.items() if campo in campos_publicos}
-            for ref in refs
+            for ref in ordenar_referidos(refs)
         ])
     
     @app.route('/colaboradores/<string:colab_id>/referidos', methods=['GET'])
@@ -55,7 +56,7 @@ def register_referidos_routes(app):
         except (RequestException, ValueError):
             app.logger.exception('Error consultando referidos')
             return jsonify({"error": "No se pudieron consultar los referidos"}), 502
-        return jsonify(refs)
+        return jsonify(ordenar_referidos(refs))
 
     @app.route('/landing-data', methods=['GET'])
     def landing_data():

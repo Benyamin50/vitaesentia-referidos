@@ -30,6 +30,11 @@ test('crear devuelve la identidad real sin hacer otra consulta', async () => {
   assert.equal(calls[0][1].headers.Authorization, 'Bearer ADMIN')
 })
 
+test('la landing enlaza al formulario único sin guardar ni consultar al montar', () => {
+  assert.equal(api.getFormularioReferidoUrl('code &?x=1'), 'https://vitaesentia-referidos.onrender.com/qr?ref=code%20%26%3Fx%3D1')
+  assert.equal(calls.length, 0)
+})
+
 test('crear normaliza un registro anidado con codigo', async () => {
   respond({ colaborador: { id: 18, codigo: 'REAL' } })
   assert.equal((await api.crearColaborador({})).codigo_unico, 'REAL')

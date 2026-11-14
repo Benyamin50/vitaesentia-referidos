@@ -1,8 +1,33 @@
-from flask import request, jsonify
-import datetime
+from flask import request, jsonify, redirect, render_template, current_app, make_response
+from itsdangerous import URLSafeSerializer, BadSignature
+from urllib.parse import urlencode
+import os
+import re
 import requests
 import secrets
 from sheets_api import verificar_colaborador, registrar_referido, verificar_video_token
+
+
+def _firmador_formulario():
+    secreto = (
+        current_app.config.get('FORM_SIGNING_SECRET')
+        or os.environ.get('FORM_SIGNING_SECRET')
+        or os.environ.get('APPS_SCRIPT_EDIT_SECRET')
+    )
+    if not secreto:
+        raise RuntimeError('Falta configurar FORM_SIGNING_SECRET o APPS_SCRIPT_EDIT_SECRET')
+    return URLSafeSerializer(secreto, salt='referidos-form-v1')
+
+
+def _validar_estado_formulario(estado, ref, submission_id):
+    if (
+        not isinstance(estado, dict)
+        or estado.get('ref') != ref
+        or estado.get('submission_id') != submission_id
+        or not re.fullmatch(r'[A-Za-z0-9_-]{32,128}', str(submission_id))
+        or not re.fullmatch(r'[A-Za-z0-9_-]{32,128}', str(estado.get('video_token', '')))
+    ):
+        raise BadSignature('Estado del formulario inválido')
 
 def obtener_geolocalizacion(ip):
     try:
@@ -51,149 +76,114 @@ def analizar_user_agent(user_agent):
     return tipo, sistema, navegador
 
 def register_qr_routes(app):
-    
+
     @app.route('/qr', methods=['GET', 'POST'])
     def qr():
-        ref = request.args.get('ref', '')
-        nombre_colaborador = 'nuestro equipo'
+        ref = request.args.get('ref', '').strip()
+        datos = {campo: request.form.get(campo, '').strip() for campo in ('nombre', 'apellido', 'email', 'telefono')}
+        acepto_datos = request.form.get('acepto_datos') == '1'
         mensaje = None
-        
-        colab_info = verificar_colaborador(ref)
-        if colab_info.get("valido"):
-            nombre_colaborador = colab_info.get("nombre", "nuestro equipo")
-            
-        if request.method == 'POST':
-            referido_nombre = request.form.get('nombre', '').strip()
-            referido_apellido = request.form.get('apellido', '').strip()
-            referido_email = request.form.get('email', '').strip()
-            referido_telefono = request.form.get('telefono', '').strip()
-            
-            if not referido_nombre or not referido_apellido or not referido_email or not referido_telefono:
-                mensaje = "Por favor complete todos los campos."
-            elif request.form.get('acepto_datos') != '1':
-                mensaje = "Debes aceptar la política de protección de datos para continuar."
+        status = 200
+        nombre_colaborador = 'nuestro equipo'
+        habilitado = True
+        submission_token = request.form.get('submission_token', '')
+        submission_id = request.form.get('submission_id', '')
+        estado = None
+
+        try:
+            firmador = _firmador_formulario()
+            if request.method == 'POST':
+                estado = firmador.loads(submission_token)
+                _validar_estado_formulario(estado, ref, submission_id)
             else:
-                # AQUÍ ESTÁ EL TRUCO PARA OBTENER LA IP REAL DETRÁS DEL PROXY
-                if request.headers.get('X-Forwarded-For'):
-                    ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+                estado = {
+                    'ref': ref,
+                    'submission_id': secrets.token_urlsafe(24),
+                    'video_token': secrets.token_urlsafe(32),
+                }
+                submission_id = estado['submission_id']
+                submission_token = firmador.dumps(estado)
+        except BadSignature:
+            mensaje = 'Este formulario no es válido. Vuelve a abrirlo desde el enlace de invitación.'
+            status, habilitado = 400, False
+        except RuntimeError:
+            app.logger.exception('No se pudo preparar el formulario de referido')
+            mensaje = 'El formulario no está disponible temporalmente. Intenta nuevamente más tarde.'
+            status, habilitado = 503, False
+
+        if habilitado:
+            try:
+                colab_info = verificar_colaborador(ref)
+                if not isinstance(colab_info, dict) or colab_info.get('valido') is not True:
+                    mensaje = 'El código de invitación no es válido.'
+                    status, habilitado = 404, False
                 else:
-                    ip = request.remote_addr
-                
+                    nombre_colaborador = colab_info.get('nombre') or nombre_colaborador
+            except (requests.RequestException, ValueError):
+                app.logger.exception('No se pudo verificar la invitación')
+                mensaje = 'No pudimos verificar la invitación. Intenta enviar tus datos nuevamente.'
+                status = 502
+
+        if request.method == 'POST' and habilitado and mensaje is None:
+            if not all(datos.values()):
+                mensaje, status = 'Por favor completa todos los campos.', 400
+            elif not acepto_datos:
+                mensaje, status = 'Debes aceptar la política de protección de datos para continuar.', 400
+            else:
+                ip = (request.headers.get('X-Forwarded-For') or request.remote_addr or '').split(',')[0].strip()
                 user_agent = request.headers.get('User-Agent', '')
                 pais, ciudad = obtener_geolocalizacion(ip)
                 tipo_dispositivo, sistema_op, navegador = analizar_user_agent(user_agent)
-                
-                token = secrets.token_urlsafe(32)
-                
                 data_referido = {
-                    "colaborador_id": ref,
-                    "ip": ip,
-                    "user_agent": user_agent,
-                    "pais": pais,
-                    "ciudad": ciudad,
-                    "tipo_dispositivo": tipo_dispositivo,
-                    "sistema_operativo": sistema_op,
-                    "navegador": navegador,
-                    "referido_nombre": referido_nombre,
-                    "referido_apellido": referido_apellido,
-                    "referido_email": referido_email,
-                    "referido_telefono": referido_telefono,
-                    "video_token": token,
-                    "acepto_datos": 1
+                    'submission_id': estado['submission_id'],
+                    'colaborador_id': ref,
+                    'ip': ip,
+                    'user_agent': user_agent,
+                    'pais': pais,
+                    'ciudad': ciudad,
+                    'tipo_dispositivo': tipo_dispositivo,
+                    'sistema_operativo': sistema_op,
+                    'navegador': navegador,
+                    'referido_nombre': datos['nombre'],
+                    'referido_apellido': datos['apellido'],
+                    'referido_email': datos['email'],
+                    'referido_telefono': datos['telefono'],
+                    'video_token': estado['video_token'],
+                    'acepto_datos': 1,
                 }
-                
                 try:
-                    registrar_referido(data_referido)
-                except Exception as e:
-                    print("Error guardando en Sheets:", e)
-                
-                return f'''
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <script>
-                        window.location.href = 'https://www.vitaesentia.com/vitaesentiaref/videos-referidos?token={token}';
-                    </script>
-                </head>
-                <body style="font-family: sans-serif; text-align: center; padding: 50px; color: #64748B;">
-                    Cargando videos...
-                </body>
-                </html>
-                '''
-        
-        return f'''
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-            <title>Formulario de Referido - Vitaesentia</title>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-            <style>
-                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-                body {{ font-family: 'Inter', sans-serif; min-height: 100vh; background-color: #F8FAFC; display: flex; align-items: center; justify-content: center; padding: 20px; }}
-                .card {{ background: white; border-radius: 24px; padding: 40px; max-width: 450px; width: 100%; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05); }}
-                h1 {{ text-align: center; color: #0F172A; font-size: 1.6rem; margin-bottom: 8px; }}
-                .subtitulo {{ text-align: center; color: #64748B; font-size: 0.9rem; margin-bottom: 25px; }}
-                .referido-por {{ text-align: center; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 14px; border-radius: 12px; margin-bottom: 30px; font-size: 0.9rem; color: #334155; }}
-                .referido-por strong {{ color: #007BFF; font-size: 1.05rem; display: block; margin-top: 4px; }}
-                .form-group {{ margin-bottom: 20px; text-align: left; }}
-                label {{ display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: #334155; }}
-                input {{ width: 100%; padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 10px; font-size: 1rem; background-color: #F8FAFC; outline: none; }}
-                .btn-submit {{ width: 100%; background: #007BFF; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }}
-                .consentimiento {{
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 10px;
-                    margin-bottom: 20px;
-                    line-height: 1.5;
-                    cursor: pointer;
-                }}
+                    resultado = registrar_referido(data_referido)
+                    if not isinstance(resultado, dict) or resultado.get('success') is not True or resultado.get('error'):
+                        raise ValueError('Guardado no confirmado')
+                    # En una repetición, Apps Script devuelve el token del registro existente.
+                    token = resultado.get('video_token', estado['video_token'])
+                    if not isinstance(token, str) or not re.fullmatch(r'[A-Za-z0-9_-]{32,128}', token):
+                        raise ValueError('Token guardado inválido')
+                except (requests.RequestException, ValueError):
+                    app.logger.exception('No se pudo confirmar el registro del referido')
+                    mensaje = 'No pudimos confirmar el guardado. Reintenta con este mismo formulario; se conservará el identificador de tu envío.'
+                    status = 502
+                else:
+                    response = redirect(
+                        'https://www.vitaesentia.com/vitaesentiaref/videos-referidos?' + urlencode({'token': token}),
+                        code=303,
+                    )
+                    response.headers['Cache-Control'] = 'no-store'
+                    return response
 
-                .consentimiento input[type="checkbox"] {{
-                    width: 18px;
-                    height: 18px;
-                    flex-shrink: 0;
-                    margin-top: 2px;
-                    padding: 0;
-                    accent-color: #007BFF;
-                }}
-
-                .form-error {{
-                    color: #B91C1C;
-                    font-size: 0.85rem;
-                    margin-bottom: 16px;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <h1>Bienvenido</h1>
-                <p class="subtitulo">Completa tus datos para continuar</p>
-                <div class="referido-por">Has sido invitado por: <strong>{nombre_colaborador}</strong></div>
-                {f'<p role="alert" class="form-error">{mensaje}</p>' if mensaje else ''}
-                <form method="POST">
-                    <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" required></div>
-                    <div class="form-group"><label>Apellido(s)</label><input type="text" name="apellido" required></div>
-                    <div class="form-group"><label>Correo Electronico</label><input type="email" name="email" required></div>
-                    <div class="form-group"><label>Telefono</label><input type="tel" name="telefono" required></div>
-                    <label class="consentimiento" for="acepto_datos">
-                        <input
-                            type="checkbox"
-                            id="acepto_datos"
-                            name="acepto_datos"
-                            value="1"
-                            required
-                        >
-                        <span>Acepto la política de protección de datos</span>
-                    </label>
-                    <button type="submit" class="btn-submit">Enviar mis datos</button>
-                </form>
-            </div>
-        </body>
-        </html>
-        '''
+        response = make_response(render_template(
+            'formulario_referido.html',
+            ref=ref,
+            nombre_colaborador=nombre_colaborador,
+            datos=datos,
+            acepto_datos=acepto_datos,
+            submission_id=submission_id,
+            submission_token=submission_token,
+            mensaje=mensaje,
+            habilitado=habilitado,
+        ), status)
+        response.headers['Cache-Control'] = 'no-store'
+        return response
 
     @app.route('/verificar-token', methods=['GET'])
     def verificar_token():
