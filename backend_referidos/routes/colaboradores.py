@@ -39,7 +39,7 @@ def require_admin(f):
     @require_auth
     def decorated(*args, **kwargs):
         if g.colaborador.get('rol') != 'admin':
-            return jsonify({"error": "Solo el administrador puede modificar colaboradores"}), 403
+            return jsonify({"error": "Solo el administrador puede realizar esta acción"}), 403
         return f(*args, **kwargs)
     return decorated
 

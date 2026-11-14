@@ -5,6 +5,7 @@ from routes.colaboradores import register_colaboradores_routes
 from routes.referidos import register_referidos_routes
 from routes.stats import register_stats_routes
 from routes.qr import register_qr_routes
+from routes.videos import register_videos_routes
 
 # Inicializar app
 app = Flask(__name__)
@@ -15,6 +16,7 @@ register_colaboradores_routes(app)
 register_referidos_routes(app)
 register_stats_routes(app)
 register_qr_routes(app)
+register_videos_routes(app)
 
 # Ruta raíz
 @app.route('/')

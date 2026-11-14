@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import html2pdf from 'html2pdf.js'
 import logoVitaesentia from '../../assets/vitaesentia-logo.png'
+import GestionVideos from '../GestionVideos/GestionVideos'
 import './TablaColaboradores.css'
 
 const dashboardIcons = {
@@ -21,6 +22,7 @@ const dashboardIcons = {
   shield: 'M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6z M8 12l3 3 5-6',
   refresh:
     'M20 7v5h-5 M4 17v-5h5 M6 7a7 7 0 0 1 12-2l2 2 M4 17l2 2a7 7 0 0 0 12-2',
+  video: 'M3 5h18v14H3z M10 9l5 3-5 3z',
 }
 
 function DashboardIcon({ name, size = 20 }) {
@@ -64,6 +66,8 @@ export default function TablaColaboradores() {
   const [operacionesPendientes, setOperacionesPendientes] = useState(0)
   const [guardandoColaboradores, setGuardandoColaboradores] = useState({})
   const [mensajesReferidos, setMensajesReferidos] = useState({})
+  const [videosOcupados, setVideosOcupados] = useState(false)
+  const [revisionVideos, setRevisionVideos] = useState(0)
   const crearDialogRef = useRef(null)
   const operacionesRef = useRef(new Set())
   const actualizandoRef = useRef(false)
@@ -105,6 +109,7 @@ export default function TablaColaboradores() {
     colaboradores: 'Colaboradores',
     'mis-referidos': 'Mis Referidos',
     detalle: 'Detalle del colaborador',
+    videos: 'Videos',
   }[seccionActiva]
 
   const cambiarSeccion = (seccion) => {
@@ -188,6 +193,7 @@ export default function TablaColaboradores() {
     if (
       !esAdmin ||
       actualizandoRef.current ||
+      videosOcupados ||
       operacionesRef.current.size ||
       Object.values(cargandoReferidos).some(Boolean)
     )
@@ -235,6 +241,7 @@ export default function TablaColaboradores() {
         return errores
       })
       setMensajesReferidos({})
+      setRevisionVideos((revision) => revision + 1)
       if (seccionActiva === 'detalle' && !clavesValidas.has(showReferidos)) {
         setShowReferidos(null)
         setSeccionActiva('colaboradores')
@@ -890,6 +897,17 @@ export default function TablaColaboradores() {
             <DashboardIcon name="referrals" />
             <span>Mis Referidos</span>
           </button>
+          {esAdmin && (
+            <button
+              type="button"
+              className={seccionActiva === 'videos' ? 'active' : ''}
+              aria-pressed={seccionActiva === 'videos'}
+              onClick={() => cambiarSeccion('videos')}
+            >
+              <DashboardIcon name="video" />
+              <span>Videos</span>
+            </button>
+          )}
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-session">
@@ -925,6 +943,7 @@ export default function TablaColaboradores() {
                 className="btn-pdf dashboard-refresh"
                 disabled={
                   actualizandoDatos ||
+                  videosOcupados ||
                   operacionesPendientes > 0 ||
                   Object.values(cargandoReferidos).some(Boolean)
                 }
@@ -950,6 +969,16 @@ export default function TablaColaboradores() {
         </header>
 
         <main className="dashboard-content">
+          {esAdmin && (
+            <div hidden={seccionActiva !== 'videos'}>
+              <GestionVideos
+                active={seccionActiva === 'videos'}
+                refreshing={actualizandoDatos}
+                refreshKey={revisionVideos}
+                onBusyChange={setVideosOcupados}
+              />
+            </div>
+          )}
           {seccionActiva === 'resumen' && (
             <section id="resumen" aria-labelledby="dashboard-title">
               <div className="dashboard-page-heading">

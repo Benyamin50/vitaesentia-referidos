@@ -1,0 +1,133 @@
+.vita-dashboard .gestion-videos-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.vita-dashboard .gestion-videos h2 {
+  font-size: 17px;
+  margin: 0 0 20px;
+}
+.vita-dashboard .gestion-video-form-card,
+.vita-dashboard .gestion-video-list-card {
+  min-width: 0;
+  padding: 24px;
+}
+.vita-dashboard .gestion-video-form-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vita-dashboard .gestion-video-form-card label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  margin-top: 8px;
+}
+.vita-dashboard .gestion-video-form-card input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+.vita-dashboard .gestion-video-form-card small {
+  color: #64748b;
+  line-height: 1.6;
+}
+.vita-dashboard .gestion-video-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+.vita-dashboard .gestion-video-form-actions,
+.vita-dashboard .gestion-video-row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.vita-dashboard .gestion-video-row-actions {
+  margin-top: 0;
+}
+.vita-dashboard .gestion-video-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.vita-dashboard .gestion-video-list-header h2 {
+  margin: 0;
+}
+.vita-dashboard .gestion-video-table-scroll {
+  max-height: 650px;
+  overflow: auto;
+}
+.vita-dashboard .gestion-videos table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 450px;
+}
+.vita-dashboard .gestion-videos th {
+  text-align: left;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+}
+.vita-dashboard .gestion-videos th,
+.vita-dashboard .gestion-videos td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+.vita-dashboard .gestion-videos td strong {
+  color: #0f172a;
+  font-family: inherit;
+  display: block;
+  max-width: 320px;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.vita-dashboard .gestion-video-form-card label {
+  font-family: inherit;
+}
+.vita-dashboard .gestion-videos td a {
+  display: block;
+  margin-top: 6px;
+  color: #0056b3;
+  font-size: 12px;
+}
+.vita-dashboard .gestion-videos-error {
+  padding: 16px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  border-radius: 12px;
+  color: #991b1b;
+}
+.vita-dashboard .gestion-videos-error p {
+  margin: 0 0 12px;
+}
+.vita-dashboard .gestion-videos-status {
+  min-height: 24px;
+  color: #0056b3;
+  font-size: 13px;
+}
+@media (max-width: 1200px) {
+  .vita-dashboard .gestion-videos-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .vita-dashboard .gestion-video-form-card,
+  .vita-dashboard .gestion-video-list-card {
+    padding: 16px;
+  }
+}

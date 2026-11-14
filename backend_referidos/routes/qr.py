@@ -2,7 +2,7 @@ from flask import request, jsonify
 import datetime
 import requests
 import secrets
-from sheets_api import verificar_colaborador, registrar_referido
+from sheets_api import verificar_colaborador, registrar_referido, verificar_video_token
 
 def obtener_geolocalizacion(ip):
     try:
@@ -200,4 +200,9 @@ def register_qr_routes(app):
         token = request.args.get('token', '')
         if not token:
             return jsonify({"valido": False}), 400
-        return jsonify({"valido": True})
+        try:
+            valido = verificar_video_token(token)
+        except (requests.RequestException, ValueError):
+            app.logger.exception('Error verificando acceso a videos')
+            return jsonify({'error': 'No se pudo verificar el acceso. Intenta nuevamente.'}), 502
+        return jsonify({'valido': valido}), 200 if valido else 401

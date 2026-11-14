@@ -3,7 +3,7 @@ import os
 
 APPS_SCRIPT_URL = os.environ.get(
     'APPS_SCRIPT_URL', 
-    'https://script.google.com/macros/s/AKfycbxun_8UUKCKwHlEs2ORTqmMnKxZOmitzMjozSnwBeQleMSr0iI_tFI6v3vMm5KyIpm8Ug/exec'
+    'https://script.google.com/macros/s/AKfycbzG4zohtt-tz0c0ON4sRJmwA_LYoHPnDaZNC0_1faYX2M8nmnBzJrQnFzN1E9ti9WudIA/exec'
 )
 
 def get_colaboradores():
@@ -81,3 +81,53 @@ def eliminar_colaborador(id):
         'id': id
     }, timeout=10)
     return res.json()
+
+
+def verificar_video_token(token):
+    if not isinstance(token, str) or not token.strip() or len(token) > 256:
+        return False
+    res = requests.get(
+        APPS_SCRIPT_URL, params={'action': 'verificarToken', 'token': token}, timeout=10
+    )
+    res.raise_for_status()
+    resultado = res.json()
+    if not isinstance(resultado, dict) or resultado.get('success') is False or 'valido' not in resultado:
+        raise ValueError('Respuesta de verificación de token inválida')
+    return resultado['valido'] is True
+
+
+def obtener_videos():
+    res = requests.get(APPS_SCRIPT_URL, params={'action': 'getVideos'}, timeout=10)
+    res.raise_for_status()
+    resultado = res.json()
+    if not isinstance(resultado, list):
+        raise ValueError('Lista de videos inválida')
+    return resultado
+
+
+def _guardar_video(action, **data):
+    secreto = os.environ.get('APPS_SCRIPT_EDIT_SECRET')
+    if not secreto:
+        raise RuntimeError('Falta configurar APPS_SCRIPT_EDIT_SECRET')
+    res = requests.post(
+        APPS_SCRIPT_URL,
+        json={'action': action, **data, 'edit_secret': secreto},
+        timeout=15,
+    )
+    res.raise_for_status()
+    resultado = res.json()
+    if not isinstance(resultado, dict):
+        raise ValueError('Respuesta de videos inválida')
+    return resultado
+
+
+def crear_video(titulo, url_youtube, orden):
+    return _guardar_video('crearVideo', titulo=titulo, url_youtube=url_youtube, orden=orden)
+
+
+def editar_video(video_id, titulo, url_youtube, orden):
+    return _guardar_video('editarVideo', id=video_id, titulo=titulo, url_youtube=url_youtube, orden=orden)
+
+
+def eliminar_video(video_id):
+    return _guardar_video('eliminarVideo', id=video_id)

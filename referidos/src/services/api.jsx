@@ -15,8 +15,8 @@ const getAuthHeaders = () => {
 };
 
 // Función auxiliar para manejar errores
-const handleResponse = async (response) => {
-  if (response.status === 401) {
+const handleResponse = async (response, { redirectOn401 = true } = {}) => {
+  if (response.status === 401 && redirectOn401) {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('colaborador_codigo');
     localStorage.removeItem('colaborador_nombre');
@@ -29,7 +29,10 @@ const handleResponse = async (response) => {
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || `Error ${response.status}: ${response.statusText}`);
+    const failure = new Error(error.error || `Error ${response.status}: ${response.statusText}`);
+    failure.status = response.status;
+    failure.code = error.code;
+    throw failure;
   }
   const data = await response.json();
   if (data?.success === false || data?.error) {
@@ -39,6 +42,47 @@ const handleResponse = async (response) => {
 };
 
 export const api = {
+  async verificarVideoToken(token, { signal } = {}) {
+    const response = await fetch(`${API_BASE_URL}/verificar-token?token=${encodeURIComponent(token)}`, { signal });
+    if (response.status === 400 || response.status === 401) return { valido: false };
+    return handleResponse(response, { redirectOn401: false });
+  },
+
+  async getVideos({ token, signal } = {}) {
+    const response = await fetch(`${API_BASE_URL}/videos`, {
+      headers: token ? { 'X-Video-Token': token } : getAuthHeaders(),
+      signal
+    });
+    const data = await handleResponse(response, { redirectOn401: !token });
+    if (!Array.isArray(data)) throw new Error('Lista de videos inválida.');
+    return data;
+  },
+
+  async crearVideo(data) {
+    const response = await fetch(`${API_BASE_URL}/videos`, {
+      method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data)
+    });
+    const result = await handleResponse(response);
+    if (!result.video?.id) throw new Error('No se recibió el video guardado. Actualiza el catálogo antes de reintentar.');
+    return result.video;
+  },
+
+  async editarVideo(id, data) {
+    const response = await fetch(`${API_BASE_URL}/videos/${encodeURIComponent(id)}`, {
+      method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify(data)
+    });
+    const result = await handleResponse(response);
+    if (!result.video?.id) throw new Error('No se recibió el video guardado. Actualiza el catálogo antes de reintentar.');
+    return result.video;
+  },
+
+  async eliminarVideo(id) {
+    const response = await fetch(`${API_BASE_URL}/videos/${encodeURIComponent(id)}`, {
+      method: 'DELETE', headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+  },
+
   async getColaboradores() {
     const response = await fetch(`${API_BASE_URL}/colaboradores`, {
       headers: getAuthHeaders()

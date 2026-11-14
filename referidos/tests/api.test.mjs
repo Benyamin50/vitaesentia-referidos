@@ -65,3 +65,28 @@ test('una lista invalida se rechaza antes de reemplazar los datos locales', asyn
   await assert.rejects(api.getReferidos('OWN'), /Lista de referidos/)
   await assert.rejects(api.getReferidosPorId(2), /Lista de referidos/)
 })
+
+test('un referido consulta videos con su token sin enviar la sesión del administrador', async () => {
+  respond([])
+  await api.getVideos({ token: 'referral-token' })
+  assert.equal(calls[0][1].headers['X-Video-Token'], 'referral-token')
+  assert.equal(calls[0][1].headers.Authorization, undefined)
+})
+
+test('un token de video inválido no redirige al login ni borra la sesión administrativa', async () => {
+  const removed = []
+  globalThis.localStorage.removeItem = key => removed.push(key)
+  respond({ error: 'Token inválido', code: 'INVALID_VIDEO_TOKEN' }, 401)
+  await assert.rejects(api.getVideos({ token: 'bad' }), error => error.status === 401 && error.code === 'INVALID_VIDEO_TOKEN')
+  assert.equal(removed.length, 0)
+  assert.deepEqual(await api.verificarVideoToken('bad'), { valido: false })
+})
+
+test('el CRUD de videos devuelve el registro guardado y no vuelve a consultar el catálogo', async () => {
+  const video = { id: 'sheet-id', titulo: 'Video', url_youtube: 'https://youtu.be/dQw4w9WgXcQ', orden: 0 }
+  respond({ success: true, video })
+  assert.deepEqual(await api.crearVideo(video), video)
+  assert.deepEqual(await api.editarVideo(video.id, video), video)
+  await api.eliminarVideo(video.id)
+  assert.deepEqual(calls.map(([, options]) => options.method), ['POST', 'PUT', 'DELETE'])
+})
